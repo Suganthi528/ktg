@@ -1,0 +1,37 @@
+:root{--bg:#f4f6fb;--card:#fff;--ink:#1c2333;--mute:#6b7488;--acc:#3b5bfd;--line:#e5e8f0}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1320;--card:#181d2e;--ink:#e8ecf6;--mute:#9aa3b8;--line:#272d44}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,sans-serif}
+.wrap{max-width:1050px;margin:0 auto;padding:20px 16px}
+header h1{margin:0}
+header p{color:var(--mute);margin:4px 0 16px}
+.grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+h2{font-size:16px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--mute);margin-bottom:10px}
+input,select{width:100%;margin-top:4px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:15px}
+.chk{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:15px}
+.chk input{width:auto;margin:0}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.row4{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.big{display:flex;gap:12px}
+.big div{flex:1;background:var(--bg);border-radius:10px;padding:12px}
+.big small{color:var(--mute);display:block}
+.big b{font-size:26px;color:var(--acc)}
+.tag{font-size:11px;background:var(--acc);color:#fff;padding:2px 8px;border-radius:99px;vertical-align:middle}
+.rec{background:var(--bg);padding:10px;border-radius:8px}
+table{width:100%;border-collapse:collapse}
+td{padding:7px 0;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right}
+.sub td,.tot td{font-weight:600}
+.tot td{font-size:17px;color:var(--acc)}
+.note{color:var(--mute);font-size:13px}
+button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;font-size:14px}
+button.link{background:none;color:var(--acc);padding:4px 0}
+h3{font-size:14px;margin:14px 0 4px}
+.act{white-space:nowrap}
+.act button{margin-left:6px}
+td small{color:var(--mute)}
+.big b{font-size:20px}
+@media print{.rates,button,.input,.saved{display:none}.grid{display:block}}

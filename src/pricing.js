@@ -1,0 +1,83 @@
+// All money in INR. Defaults are editable in the UI (saved in localStorage).
+export const DEFAULT_RATES = {
+  usdToInr: 85,
+  // Linode plans (USD/month); cap = capacity points vs computed load
+  plans: [
+    { name: 'Nanode 1GB', usd: 5, cap: 40 },
+    { name: 'Linode 2GB', usd: 12, cap: 120 },
+    { name: 'Linode 4GB', usd: 24, cap: 300 },
+    { name: 'Linode 8GB', usd: 48, cap: 700 },
+    { name: 'Linode 16GB', usd: 96, cap: 1600 },
+  ],
+  linodeBackupPct: 25, // % of plan price
+  sharedTenants: 5, // clients sharing one server when "shared"
+  // DigitalOcean managed DB
+  dbPlans: [
+    { name: 'DB 1GB', usd: 15, cap: 150 },
+    { name: 'DB 2GB', usd: 30, cap: 500 },
+    { name: 'DB 4GB', usd: 60, cap: 1500 },
+    { name: 'DB 8GB', usd: 120, cap: 4000 },
+  ],
+  spacesUsdPer250GB: 5, // DO Spaces base (250GB)
+  spacesExtraUsdPerGB: 0.02,
+  mbPerClient: 5, // docs/photos per client (MB)
+  // Map charge (Google Maps style)
+  mapUsdPer1000: 7,
+  mapLoadsPerUserPerDay: 40,
+  workDaysPerMonth: 26,
+  // Selling side
+  markupPct: 40,
+  perUser: 150,
+  perBranch: 500,
+  perClient: 1,
+  moduleFee: { backup: 500, tracking: 1500, mfi: 3000 },
+  setupFee: 10000,
+  yearDiscountPct: 10,
+};
+
+const pick = (list, load) => list.find((p) => p.cap >= load) || list[list.length - 1];
+
+export function calculate(inp, r) {
+  const fx = r.usdToInr;
+  const { users, branches, clients, mode, backup, tracking, mfi, trackedUsers } = inp;
+  const tracked = tracking ? Math.min(trackedUsers, users) : 0;
+
+  const load = users + clients / 50 + branches * 2 + tracked * 3 + (mfi ? users * 0.5 : 0);
+  const plan = pick(r.plans, load);
+  const dbPlan = pick(r.dbPlans, clients / 10 + users * 2 + tracked * 20);
+
+  const share = mode === 'shared' ? 1 / r.sharedTenants : 1;
+  const linode = plan.usd * fx * share;
+  const linodeBackup = backup ? plan.usd * (r.linodeBackupPct / 100) * fx * share : 0;
+  const db = dbPlan.usd * fx * share;
+
+  const dataGB = (clients * r.mbPerClient) / 1024 + tracked * 0.3;
+  const storageGB = backup ? dataGB * 3 : dataGB; // 3 retained backup copies
+  const extra = Math.max(0, storageGB - 250);
+  const storage = (r.spacesUsdPer250GB + extra * r.spacesExtraUsdPerGB) * fx * share;
+
+  const mapLoads = tracked * r.mapLoadsPerUserPerDay * r.workDaysPerMonth;
+  const map = (mapLoads / 1000) * r.mapUsdPer1000 * fx;
+
+  const infra = linode + linodeBackup + db + storage + map;
+  const markup = infra * (r.markupPct / 100);
+  const fees =
+    users * r.perUser + branches * r.perBranch + clients * r.perClient +
+    (backup ? r.moduleFee.backup : 0) + (tracking ? r.moduleFee.tracking : 0) + (mfi ? r.moduleFee.mfi : 0);
+  const monthly = infra + markup + fees;
+  const yearGross = monthly * 12;
+  const yearly = yearGross * (1 - r.yearDiscountPct / 100);
+
+  return {
+    plan, dbPlan, dataGB, storageGB, mapLoads, load,
+    lines: [
+      ['Linode server - ' + plan.name, linode],
+      ['Linode backups', linodeBackup],
+      ['DigitalOcean DB - ' + dbPlan.name, db],
+      ['Cloud storage (Spaces) ' + storageGB.toFixed(1) + ' GB', storage],
+      ['Map charge (' + Math.round(mapLoads).toLocaleString() + ' loads)', map],
+    ],
+    infra, markup, fees, monthly, yearGross, yearly,
+    profit: markup + fees,
+  };
+}
