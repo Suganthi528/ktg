@@ -8,6 +8,10 @@ export const DEFAULT_RATES = {
     { name: 'Linode 4GB', usd: 24, cap: 300 },
     { name: 'Linode 8GB', usd: 48, cap: 700 },
     { name: 'Linode 16GB', usd: 96, cap: 1600 },
+    { name: 'Linode 32GB', usd: 192, cap: 3500 },
+    { name: 'Linode 64GB', usd: 384, cap: 8000 },
+    { name: 'Linode 96GB', usd: 576, cap: 16000 },
+    { name: 'Linode 128GB', usd: 768, cap: 32000 },
   ],
   linodeBackupPct: 25, // % of plan price
   sharedTenants: 5, // clients sharing one server when "shared"
@@ -17,6 +21,9 @@ export const DEFAULT_RATES = {
     { name: 'DB 2GB', usd: 30, cap: 500 },
     { name: 'DB 4GB', usd: 60, cap: 1500 },
     { name: 'DB 8GB', usd: 120, cap: 4000 },
+    { name: 'DB 16GB', usd: 240, cap: 10000 },
+    { name: 'DB 32GB', usd: 480, cap: 25000 },
+    { name: 'DB 64GB', usd: 960, cap: 60000 },
   ],
   spacesUsdPer250GB: 5, // DO Spaces base (250GB)
   spacesExtraUsdPerGB: 0.02,
@@ -40,7 +47,11 @@ const pick = (list, load) => list.find((p) => p.cap >= load) || list[list.length
 
 export function calculate(inp, r) {
   const fx = r.usdToInr;
-  const { users, branches, clients, mode, backup, tracking, mfi, trackedUsers } = inp;
+  const users = Math.max(0, Number(inp.users) || 0);
+  const branches = Math.max(0, Number(inp.branches) || 0);
+  const clients = Math.max(0, Number(inp.clients) || 0);
+  const trackedUsers = Math.max(0, Number(inp.trackedUsers) || 0);
+  const { mode, backup, tracking, mfi } = inp;
   const tracked = tracking ? Math.min(trackedUsers, users) : 0;
 
   const load = users + clients / 50 + branches * 2 + tracked * 3 + (mfi ? users * 0.5 : 0);
