@@ -53,48 +53,87 @@ export function calculate(inp, r) {
   const trackedUsers = Math.max(0, Number(inp.trackedUsers) || 0);
   const { mode, backup, tracking, mfi } = inp;
   const tracked = tracking ? Math.min(trackedUsers, users) : 0;
+  const ovr = inp.overrides || {};
 
   const load = users + clients / 50 + branches * 2 + tracked * 3 + (mfi ? users * 0.5 : 0);
   const plan = pick(r.plans, load);
   const dbPlan = pick(r.dbPlans, clients / 10 + users * 2 + tracked * 20);
 
   const share = mode === 'shared' ? 1 / r.sharedTenants : 1;
-  const linode = plan.usd * fx * share;
-  const linodeBackup = backup ? plan.usd * (r.linodeBackupPct / 100) * fx * share : 0;
-  const db = dbPlan.usd * fx * share;
+  const autoLinode = plan.usd * fx * share;
+  const autoLinodeBackup = backup ? plan.usd * (r.linodeBackupPct / 100) * fx * share : 0;
+  const autoDb = dbPlan.usd * fx * share;
 
   const dataGB = (clients * r.mbPerClient) / 1024 + tracked * 0.3;
   const storageGB = backup ? dataGB * 3 : dataGB; // 3 retained backup copies
   const extra = Math.max(0, storageGB - 250);
-  const storage = (r.spacesUsdPer250GB + extra * r.spacesExtraUsdPerGB) * fx * share;
+  const autoStorage = (r.spacesUsdPer250GB + extra * r.spacesExtraUsdPerGB) * fx * share;
 
   const mapLoads = tracked * r.mapLoadsPerUserPerDay * r.workDaysPerMonth;
-  const map = (mapLoads / 1000) * r.mapUsdPer1000 * fx;
+  const autoMap = (mapLoads / 1000) * r.mapUsdPer1000 * fx;
 
   const off = inp.infraOff || {};
-  const raw = { linode, linodeBackup, db, storage, map };
-  const on = (k) => (off[k] ? 0 : raw[k]);
-  const infra = on('linode') + on('linodeBackup') + on('db') + on('storage') + on('map');
-  const markup = infra * (r.markupPct / 100);
-  const fees =
+  const linode = ovr.linode !== undefined ? ovr.linode : (off.linode ? 0 : autoLinode);
+  const linodeBackup = ovr.linodeBackup !== undefined ? ovr.linodeBackup : (off.linodeBackup ? 0 : autoLinodeBackup);
+  const db = ovr.db !== undefined ? ovr.db : (off.db ? 0 : autoDb);
+  const storage = ovr.storage !== undefined ? ovr.storage : (off.storage ? 0 : autoStorage);
+  const map = ovr.map !== undefined ? ovr.map : (off.map ? 0 : autoMap);
+
+  const autoInfra = linode + linodeBackup + db + storage + map;
+  const infra = ovr.infra !== undefined ? ovr.infra : autoInfra;
+  const autoMarkup = infra * (r.markupPct / 100);
+  const markup = ovr.markup !== undefined ? ovr.markup : autoMarkup;
+
+  const autoFees =
     users * r.perUser + branches * r.perBranch + clients * r.perClient +
     (backup ? r.moduleFee.backup : 0) + (tracking ? r.moduleFee.tracking : 0) + (mfi ? r.moduleFee.mfi : 0);
-  const monthly = infra; // recurring = server/infra charge only
-  const oneTime = markup + fees; // markup + user/branch/client/module fees are one-time
-  const yearGross = monthly * 12;
-  const yearly = yearGross * (1 - r.yearDiscountPct / 100);
+  const fees = ovr.fees !== undefined ? ovr.fees : autoFees;
+
+  const autoMonthly = infra; // recurring = server/infra charge only
+  const monthly = ovr.monthly !== undefined ? ovr.monthly : autoMonthly;
+
+  const autoOneTime = markup + fees; // markup + user/branch/client/module fees are one-time
+  const oneTime = ovr.oneTime !== undefined ? ovr.oneTime : autoOneTime;
+
+  const autoYearGross = monthly * 12;
+  const yearGross = ovr.yearGross !== undefined ? ovr.yearGross : autoYearGross;
+
+  const autoYearly = yearGross * (1 - r.yearDiscountPct / 100);
+  const yearly = ovr.yearly !== undefined ? ovr.yearly : autoYearly;
+
+  const setupFee = ovr.setupFee !== undefined ? ovr.setupFee : r.setupFee;
 
   // GST (applied on top of every payment)
   const g = (r.gstPct ?? 0) / 100;
-  const oneTimeBase = oneTime + r.setupFee;
+  const autoOneTimeBase = oneTime + setupFee;
+  const oneTimeBase = ovr.oneTimeBase !== undefined ? ovr.oneTimeBase : autoOneTimeBase;
+
+  const autoGstMonthly = monthly * g;
+  const gstMonthly = ovr.gstMonthly !== undefined ? ovr.gstMonthly : autoGstMonthly;
+
+  const autoGstYearly = yearly * g;
+  const gstYearly = ovr.gstYearly !== undefined ? ovr.gstYearly : autoGstYearly;
+
+  const autoGstOneTime = oneTimeBase * g;
+  const gstOneTime = ovr.gstOneTime !== undefined ? ovr.gstOneTime : autoGstOneTime;
+
   const gst = {
-    monthly: monthly * g,
-    yearly: yearly * g,
-    oneTime: oneTimeBase * g,
+    monthly: gstMonthly,
+    yearly: gstYearly,
+    oneTime: gstOneTime,
   };
-  const monthlyTotal = monthly + gst.monthly;
-  const yearlyTotal = yearly + gst.yearly;
-  const oneTimeTotal = oneTimeBase + gst.oneTime;
+
+  const autoMonthlyTotal = monthly + gst.monthly;
+  const monthlyTotal = ovr.monthlyTotal !== undefined ? ovr.monthlyTotal : autoMonthlyTotal;
+
+  const autoYearlyTotal = yearly + gst.yearly;
+  const yearlyTotal = ovr.yearlyTotal !== undefined ? ovr.yearlyTotal : autoYearlyTotal;
+
+  const autoOneTimeTotal = oneTimeBase + gst.oneTime;
+  const oneTimeTotal = ovr.oneTimeTotal !== undefined ? ovr.oneTimeTotal : autoOneTimeTotal;
+
+  const autoProfit = markup + fees;
+  const profit = ovr.profit !== undefined ? ovr.profit : autoProfit;
 
   return {
     plan, dbPlan, dataGB, storageGB, mapLoads, load,
@@ -106,6 +145,7 @@ export function calculate(inp, r) {
       ['map', 'Map charge (' + Math.round(mapLoads).toLocaleString() + ' loads)', map],
     ],
     infra, markup, fees, oneTime, oneTimeBase, gst, monthlyTotal, yearlyTotal, oneTimeTotal, monthly, yearGross, yearly,
-    profit: markup + fees,
+    setupFee,
+    profit,
   };
 }
