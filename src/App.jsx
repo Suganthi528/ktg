@@ -17,6 +17,21 @@ const loadQuotes = () => {
   }
 };
 
+const loadRates = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('sp_rates')) || {};
+    const plans = (saved.plans && saved.plans.length >= DEFAULT_RATES.plans.length)
+      ? saved.plans
+      : DEFAULT_RATES.plans;
+    const dbPlans = (saved.dbPlans && saved.dbPlans.length >= DEFAULT_RATES.dbPlans.length)
+      ? saved.dbPlans
+      : DEFAULT_RATES.dbPlans;
+    return { ...DEFAULT_RATES, ...saved, plans, dbPlans };
+  } catch {
+    return DEFAULT_RATES;
+  }
+};
+
 const load = (k, d) => {
   try {
     return { ...d, ...JSON.parse(localStorage.getItem(k)) };
@@ -55,7 +70,7 @@ const RATE_FIELDS = [
 
 export default function App() {
   const [inp, setInp] = useState(() => load('sp_inp', START));
-  const [rates, setRates] = useState(() => load('sp_rates', DEFAULT_RATES));
+  const [rates, setRates] = useState(loadRates);
   const [show, setShow] = useState(false);
   const [quotes, setQuotes] = useState(loadQuotes);
   const [search, setSearch] = useState('');
@@ -71,6 +86,14 @@ export default function App() {
       /* ignore */
     }
   }, [inp, rates, quotes]);
+
+  useEffect(() => {
+    if (inp.client && inp.client.trim()) {
+      document.title = `Quote - ${inp.client.trim()}`;
+    } else {
+      document.title = 'Server Price Calculator';
+    }
+  }, [inp.client]);
 
   const saveQuote = () => {
     if (!inp.client.trim()) {
@@ -94,6 +117,9 @@ export default function App() {
     setInp(q.inp);
     setRates(q.rates);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      window.print();
+    }, 150);
   };
 
   const delQuote = (id) => setQuotes(quotes.filter((q) => q.id !== id));
@@ -112,10 +138,15 @@ export default function App() {
 
   const set = (k) => (e) => {
     const t = e.target;
-    setInp({
-      ...inp,
-      [k]: t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(0, +t.value) : t.value,
-    });
+    let val;
+    if (t.type === 'checkbox') {
+      val = t.checked;
+    } else if (t.type === 'number') {
+      val = t.value === '' ? '' : Math.max(0, +t.value);
+    } else {
+      val = t.value;
+    }
+    setInp((prev) => ({ ...prev, [k]: val }));
   };
 
   const INFRA_KEYS = ['linode', 'linodeBackup', 'db', 'storage', 'map'];
@@ -328,7 +359,11 @@ export default function App() {
         <section className="card result">
           <div className="quote-top-bar">
             <div className="quote-title-group">
-              <h2 className="quote-client-name">{inp.client || 'Quote'}</h2>
+              <div className="quote-print-brand">Server Price Calculator</div>
+              <h2 className="quote-client-name">{inp.client ? `Quote for: ${inp.client}` : 'Quote'}</h2>
+            </div>
+            <div className="quote-print-date">
+              Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
             </div>
           </div>
 
@@ -474,7 +509,7 @@ export default function App() {
                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                 <rect x="6" y="14" width="12" height="8"></rect>
               </svg>
-              <span>Print / Save PDF</span>
+              <span>Print quote</span>
             </button>
           </div>
         </section>
@@ -549,8 +584,9 @@ export default function App() {
                             type="button"
                             className="btn-action-open"
                             onClick={() => openQuote(q)}
+                            title="Open quote & print/save PDF"
                           >
-                            Open
+                            Open PDF
                           </button>
                           <button
                             type="button"
