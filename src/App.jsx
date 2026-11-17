@@ -9,6 +9,61 @@ const inr = (n) =>
   (n / FX).toLocaleString('en-US', { maximumFractionDigits: 0 }) +
   ')';
 
+function EditableAmount({ value, overrideKey, overrides, onSetOverride, onClearOverride, format = inr, className = '' }) {
+  const [editing, setEditing] = useState(false);
+  const [tempVal, setTempVal] = useState('');
+
+  const startEdit = (e) => {
+    e.stopPropagation();
+    setTempVal(Math.round(value));
+    setEditing(true);
+  };
+
+  const save = () => {
+    setEditing(false);
+    if (tempVal === '' || isNaN(tempVal)) {
+      onClearOverride(overrideKey);
+    } else {
+      onSetOverride(overrideKey, Math.max(0, Math.round(Number(tempVal))));
+    }
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      save();
+    } else if (e.key === 'Escape') {
+      setEditing(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <span className="editable-amount-wrap" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="number"
+          autoFocus
+          className="editable-amount-input"
+          value={tempVal}
+          onChange={(e) => setTempVal(e.target.value)}
+          onBlur={save}
+          onKeyDown={onKeyDown}
+        />
+        <button type="button" className="btn-editable-save" onClick={save} title="Save amount">✓</button>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`editable-amount ${className}`}
+      onClick={startEdit}
+      title="Click to edit amount"
+    >
+      <span className="editable-amount-val">{format(value)}</span>
+    </span>
+  );
+}
+
 const loadQuotes = () => {
   try {
     return JSON.parse(localStorage.getItem('sp_quotes')) || [];
@@ -50,6 +105,7 @@ const START = {
   tracking: true,
   trackedUsers: 5,
   mfi: true,
+  overrides: {},
 };
 
 const RATE_FIELDS = [
@@ -147,6 +203,34 @@ export default function App() {
       val = t.value;
     }
     setInp((prev) => ({ ...prev, [k]: val }));
+  };
+
+  const setOverride = (k, v) => {
+    setInp((prev) => ({
+      ...prev,
+      overrides: {
+        ...(prev.overrides || {}),
+        [k]: v,
+      },
+    }));
+  };
+
+  const clearOverride = (k) => {
+    setInp((prev) => {
+      const next = { ...(prev.overrides || {}) };
+      delete next[k];
+      return {
+        ...prev,
+        overrides: next,
+      };
+    });
+  };
+
+  const clearAllOverrides = () => {
+    setInp((prev) => ({
+      ...prev,
+      overrides: {},
+    }));
   };
 
   const INFRA_KEYS = ['linode', 'linodeBackup', 'db', 'storage', 'map'];
@@ -362,8 +446,24 @@ export default function App() {
               <div className="quote-print-brand">Server Price Calculator</div>
               <h2 className="quote-client-name">{inp.client ? `Quote for: ${inp.client}` : 'Quote'}</h2>
             </div>
-            <div className="quote-print-date">
-              Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+            <div className="quote-top-right">
+              {Object.keys(inp.overrides || {}).length > 0 && (
+                <button
+                  type="button"
+                  className="btn-reset-overrides"
+                  onClick={clearAllOverrides}
+                  title="Reset all edited amounts back to formula"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                  <span>Reset custom amounts</span>
+                </button>
+              )}
+              <div className="quote-print-date">
+                Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </div>
             </div>
           </div>
 
@@ -373,7 +473,15 @@ export default function App() {
               <div className="price-box-header">
                 <span className="price-box-title">Monthly</span>
               </div>
-              <div className="price-box-val">{inr(res.monthlyTotal)}</div>
+              <div className="price-box-val">
+                <EditableAmount
+                  value={res.monthlyTotal}
+                  overrideKey="monthlyTotal"
+                  overrides={inp.overrides}
+                  onSetOverride={setOverride}
+                  onClearOverride={clearOverride}
+                />
+              </div>
               <small>incl. {rates.gstPct}% GST</small>
             </div>
 
@@ -382,7 +490,15 @@ export default function App() {
                 <span className="price-box-title">Yearly</span>
                 <span className="price-discount-tag">-{rates.yearDiscountPct}%</span>
               </div>
-              <div className="price-box-val">{inr(res.yearlyTotal)}</div>
+              <div className="price-box-val">
+                <EditableAmount
+                  value={res.yearlyTotal}
+                  overrideKey="yearlyTotal"
+                  overrides={inp.overrides}
+                  onSetOverride={setOverride}
+                  onClearOverride={clearOverride}
+                />
+              </div>
               <small>incl. {rates.gstPct}% GST</small>
             </div>
           </div>
@@ -413,7 +529,17 @@ export default function App() {
                           <span>{n}</span>
                         </label>
                       </td>
-                      <td>{isOff ? 'Off' : inr(v)}</td>
+                      <td>
+                        {isOff ? 'Off' : (
+                          <EditableAmount
+                            value={v}
+                            overrideKey={k}
+                            overrides={inp.overrides}
+                            onSetOverride={setOverride}
+                            onClearOverride={clearOverride}
+                          />
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -427,50 +553,138 @@ export default function App() {
                       All off
                     </button>
                   </td>
-                  <td>{inr(res.infra)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.infra}
+                      overrideKey="infra"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr className="total-monthly-row">
                   <td>Monthly price (server only, excl. GST)</td>
-                  <td>{inr(res.monthly)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.monthly}
+                      overrideKey="monthly"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr>
                   <td>Yearly without discount</td>
-                  <td>{inr(res.yearGross)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.yearGross}
+                      overrideKey="yearGross"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr>
                   <td>One-time: Markup ({rates.markupPct}%)</td>
-                  <td>{inr(res.markup)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.markup}
+                      overrideKey="markup"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr>
                   <td>One-time: User / branch / client / module fees</td>
-                  <td>{inr(res.fees)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.fees}
+                      overrideKey="fees"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr className="setup-fee-row">
                   <td>
                     <span>One-time setup</span>
                     <span className="badge-setup-tag">Setup</span>
                   </td>
-                  <td>{inr(rates.setupFee)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.setupFee ?? rates.setupFee}
+                      overrideKey="setupFee"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr className="total-monthly-row">
                   <td>Total one-time payment (excl. GST)</td>
-                  <td>{inr(res.oneTimeBase)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.oneTimeBase}
+                      overrideKey="oneTimeBase"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr>
                   <td>GST ({rates.gstPct}%) on monthly</td>
-                  <td>{inr(res.gst.monthly)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.gst.monthly}
+                      overrideKey="gstMonthly"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr>
                   <td>GST ({rates.gstPct}%) on one-time</td>
-                  <td>{inr(res.gst.oneTime)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.gst.oneTime}
+                      overrideKey="gstOneTime"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr className="total-monthly-row">
                   <td>Monthly payable (incl. GST)</td>
-                  <td>{inr(res.monthlyTotal)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.monthlyTotal}
+                      overrideKey="monthlyTotal"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
                 <tr className="total-monthly-row">
                   <td>One-time payable (incl. GST)</td>
-                  <td>{inr(res.oneTimeTotal)}</td>
+                  <td>
+                    <EditableAmount
+                      value={res.oneTimeTotal}
+                      overrideKey="oneTimeTotal"
+                      overrides={inp.overrides}
+                      onSetOverride={setOverride}
+                      onClearOverride={clearOverride}
+                    />
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -485,7 +699,16 @@ export default function App() {
               </svg>
             </div>
             <div>
-              Your margin (one-time): <strong className="highlight-green">{inr(res.profit)}</strong>.
+              Your margin (one-time):{' '}
+              <strong className="highlight-green">
+                <EditableAmount
+                  value={res.profit}
+                  overrideKey="profit"
+                  overrides={inp.overrides}
+                  onSetOverride={setOverride}
+                  onClearOverride={clearOverride}
+                />
+              </strong>.
             </div>
           </div>
 
