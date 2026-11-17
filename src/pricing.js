@@ -33,6 +33,7 @@ export const DEFAULT_RATES = {
   moduleFee: { backup: 500, tracking: 1500, mfi: 3000 },
   setupFee: 10000,
   yearDiscountPct: 10,
+  gstPct: 18, // GST on software/hosting services (India)
 };
 
 const pick = (list, load) => list.find((p) => p.cap >= load) || list[list.length - 1];
@@ -59,25 +60,41 @@ export function calculate(inp, r) {
   const mapLoads = tracked * r.mapLoadsPerUserPerDay * r.workDaysPerMonth;
   const map = (mapLoads / 1000) * r.mapUsdPer1000 * fx;
 
-  const infra = linode + linodeBackup + db + storage + map;
+  const off = inp.infraOff || {};
+  const raw = { linode, linodeBackup, db, storage, map };
+  const on = (k) => (off[k] ? 0 : raw[k]);
+  const infra = on('linode') + on('linodeBackup') + on('db') + on('storage') + on('map');
   const markup = infra * (r.markupPct / 100);
   const fees =
     users * r.perUser + branches * r.perBranch + clients * r.perClient +
     (backup ? r.moduleFee.backup : 0) + (tracking ? r.moduleFee.tracking : 0) + (mfi ? r.moduleFee.mfi : 0);
-  const monthly = infra + markup + fees;
+  const monthly = infra; // recurring = server/infra charge only
+  const oneTime = markup + fees; // markup + user/branch/client/module fees are one-time
   const yearGross = monthly * 12;
   const yearly = yearGross * (1 - r.yearDiscountPct / 100);
+
+  // GST (applied on top of every payment)
+  const g = (r.gstPct ?? 0) / 100;
+  const oneTimeBase = oneTime + r.setupFee;
+  const gst = {
+    monthly: monthly * g,
+    yearly: yearly * g,
+    oneTime: oneTimeBase * g,
+  };
+  const monthlyTotal = monthly + gst.monthly;
+  const yearlyTotal = yearly + gst.yearly;
+  const oneTimeTotal = oneTimeBase + gst.oneTime;
 
   return {
     plan, dbPlan, dataGB, storageGB, mapLoads, load,
     lines: [
-      ['Linode server - ' + plan.name, linode],
-      ['Linode backups', linodeBackup],
-      ['DigitalOcean DB - ' + dbPlan.name, db],
-      ['Cloud storage (Spaces) ' + storageGB.toFixed(1) + ' GB', storage],
-      ['Map charge (' + Math.round(mapLoads).toLocaleString() + ' loads)', map],
+      ['linode', 'Linode server - ' + plan.name, linode],
+      ['linodeBackup', 'Linode backups', linodeBackup],
+      ['db', 'DigitalOcean DB - ' + dbPlan.name, db],
+      ['storage', 'Cloud storage (Spaces) ' + storageGB.toFixed(1) + ' GB', storage],
+      ['map', 'Map charge (' + Math.round(mapLoads).toLocaleString() + ' loads)', map],
     ],
-    infra, markup, fees, monthly, yearGross, yearly,
+    infra, markup, fees, oneTime, oneTimeBase, gst, monthlyTotal, yearlyTotal, oneTimeTotal, monthly, yearGross, yearly,
     profit: markup + fees,
   };
 }

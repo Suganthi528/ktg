@@ -42,10 +42,10 @@ const RATE_FIELDS = [
   ['markupPct', 'Markup %'],
   ['yearDiscountPct', 'Yearly discount %'],
   ['setupFee', 'Setup fee'],
+  ['gstPct', 'GST %'],
   ['perUser', 'Per user'],
   ['perBranch', 'Per branch'],
   ['perClient', 'Per client'],
-  ['sharedTenants', 'Shared: tenants per server'],
   ['mapUsdPer1000', 'Map USD / 1000 loads'],
   ['mapLoadsPerUserPerDay', 'Map loads / user / day'],
   ['mbPerClient', 'MB per client (storage)'],
@@ -108,11 +108,7 @@ export default function App() {
     return Object.entries(g);
   }, [quotes, search]);
 
-  const res = useMemo(() => calculate(inp, rates), [inp, rates]);
-  const other = useMemo(
-    () => calculate({ ...inp, mode: inp.mode === 'shared' ? 'separate' : 'shared' }, rates),
-    [inp, rates]
-  );
+  const res = useMemo(() => calculate({ ...inp, mode: 'separate' }, rates), [inp, rates]);
 
   const set = (k) => (e) => {
     const t = e.target;
@@ -121,6 +117,12 @@ export default function App() {
       [k]: t.type === 'checkbox' ? t.checked : t.type === 'number' ? Math.max(0, +t.value) : t.value,
     });
   };
+
+  const INFRA_KEYS = ['linode', 'linodeBackup', 'db', 'storage', 'map'];
+  const toggleInfra = (k) =>
+    setInp({ ...inp, infraOff: { ...inp.infraOff, [k]: !(inp.infraOff && inp.infraOff[k]) } });
+  const setAllInfra = (enabled) =>
+    setInp({ ...inp, infraOff: Object.fromEntries(INFRA_KEYS.map((k) => [k, !enabled])) });
 
   const rate = (k) => (e) => setRates({ ...rates, [k]: +e.target.value });
   const fee = (k) => (e) =>
@@ -163,26 +165,6 @@ export default function App() {
               onChange={set('client')}
               placeholder="e.g. ABC Finance"
             />
-          </div>
-
-          <div className="field-group">
-            <label className="field-label" htmlFor="server-mode">
-              Server type
-            </label>
-            <div className="select-wrapper">
-              <select
-                id="server-mode"
-                className="select-box"
-                value={inp.mode}
-                onChange={set('mode')}
-              >
-                <option value="separate">Individual (dedicated server)</option>
-                <option value="shared">Shared (multi-tenant)</option>
-              </select>
-              <svg className="select-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
           </div>
 
           {/* Users, Branches, Clients Metric Cards */}
@@ -347,9 +329,6 @@ export default function App() {
           <div className="quote-top-bar">
             <div className="quote-title-group">
               <h2 className="quote-client-name">{inp.client || 'Quote'}</h2>
-              <span className={`badge-mode ${inp.mode === 'shared' ? 'shared' : 'individual'}`}>
-                {inp.mode === 'shared' ? 'Shared' : 'Individual'}
-              </span>
             </div>
           </div>
 
@@ -359,7 +338,8 @@ export default function App() {
               <div className="price-box-header">
                 <span className="price-box-title">Monthly</span>
               </div>
-              <div className="price-box-val">{inr(res.monthly)}</div>
+              <div className="price-box-val">{inr(res.monthlyTotal)}</div>
+              <small>incl. {rates.gstPct}% GST</small>
             </div>
 
             <div className="price-box price-box-yearly">
@@ -367,7 +347,8 @@ export default function App() {
                 <span className="price-box-title">Yearly</span>
                 <span className="price-discount-tag">-{rates.yearDiscountPct}%</span>
               </div>
-              <div className="price-box-val">{inr(res.yearly)}</div>
+              <div className="price-box-val">{inr(res.yearlyTotal)}</div>
+              <small>incl. {rates.gstPct}% GST</small>
             </div>
           </div>
 
@@ -387,31 +368,47 @@ export default function App() {
           <div className="breakdown-table-wrapper">
             <table className="breakdown-table">
               <tbody>
-                {res.lines.map(([n, v]) => (
-                  <tr key={n}>
-                    <td>{n}</td>
-                    <td>{inr(v)}</td>
-                  </tr>
-                ))}
+                {res.lines.map(([k, n, v]) => {
+                  const isOff = !!(inp.infraOff && inp.infraOff[k]);
+                  return (
+                    <tr key={k} className={isOff ? 'infra-off' : ''}>
+                      <td>
+                        <label className="infra-check">
+                          <input type="checkbox" checked={!isOff} onChange={() => toggleInfra(k)} />
+                          <span>{n}</span>
+                        </label>
+                      </td>
+                      <td>{isOff ? 'Off' : inr(v)}</td>
+                    </tr>
+                  );
+                })}
                 <tr className="sub-row">
-                  <td>Infrastructure cost</td>
+                  <td>
+                    <span>Infrastructure cost</span>{' '}
+                    <button type="button" className="btn-infra-all" onClick={() => setAllInfra(true)}>
+                      All on
+                    </button>
+                    <button type="button" className="btn-infra-all" onClick={() => setAllInfra(false)}>
+                      All off
+                    </button>
+                  </td>
                   <td>{inr(res.infra)}</td>
                 </tr>
-                <tr>
-                  <td>Markup ({rates.markupPct}%)</td>
-                  <td>{inr(res.markup)}</td>
-                </tr>
-                <tr>
-                  <td>User / branch / client / module fees</td>
-                  <td>{inr(res.fees)}</td>
-                </tr>
                 <tr className="total-monthly-row">
-                  <td>Monthly price</td>
+                  <td>Monthly price (server only, excl. GST)</td>
                   <td>{inr(res.monthly)}</td>
                 </tr>
                 <tr>
                   <td>Yearly without discount</td>
                   <td>{inr(res.yearGross)}</td>
+                </tr>
+                <tr>
+                  <td>One-time: Markup ({rates.markupPct}%)</td>
+                  <td>{inr(res.markup)}</td>
+                </tr>
+                <tr>
+                  <td>One-time: User / branch / client / module fees</td>
+                  <td>{inr(res.fees)}</td>
                 </tr>
                 <tr className="setup-fee-row">
                   <td>
@@ -419,6 +416,26 @@ export default function App() {
                     <span className="badge-setup-tag">Setup</span>
                   </td>
                   <td>{inr(rates.setupFee)}</td>
+                </tr>
+                <tr className="total-monthly-row">
+                  <td>Total one-time payment (excl. GST)</td>
+                  <td>{inr(res.oneTimeBase)}</td>
+                </tr>
+                <tr>
+                  <td>GST ({rates.gstPct}%) on monthly</td>
+                  <td>{inr(res.gst.monthly)}</td>
+                </tr>
+                <tr>
+                  <td>GST ({rates.gstPct}%) on one-time</td>
+                  <td>{inr(res.gst.oneTime)}</td>
+                </tr>
+                <tr className="total-monthly-row">
+                  <td>Monthly payable (incl. GST)</td>
+                  <td>{inr(res.monthlyTotal)}</td>
+                </tr>
+                <tr className="total-monthly-row">
+                  <td>One-time payable (incl. GST)</td>
+                  <td>{inr(res.oneTimeTotal)}</td>
                 </tr>
               </tbody>
             </table>
@@ -433,8 +450,7 @@ export default function App() {
               </svg>
             </div>
             <div>
-              Your margin: <strong className="highlight-green">{inr(res.profit)}/month</strong>.{' '}
-              <span>{inp.mode === 'separate' ? 'Shared' : 'Individual'} would be {inr(other.monthly)}/month.</span>
+              Your margin (one-time): <strong className="highlight-green">{inr(res.profit)}</strong>.
             </div>
           </div>
 
@@ -519,9 +535,6 @@ export default function App() {
                       <tr key={q.id}>
                         <td className="saved-details-cell">
                           <span className="saved-date">{new Date(q.date).toLocaleDateString()}</span>
-                          <span className="saved-badge-mode">
-                            {q.inp.mode === 'shared' ? 'Shared' : 'Individual'}
-                          </span>
                           <span className="saved-specs">
                             {q.inp.users}u / {q.inp.branches}b / {q.inp.clients}c
                           </span>

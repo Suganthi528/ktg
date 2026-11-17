@@ -1176,3 +1176,49 @@ input:checked + .slider:before {
     print-color-adjust: exact;
   }
 }
+
+.infra-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.infra-check input { accent-color: #2563eb; }
+tr.infra-off td { color: #9ca3af; }
+tr.infra-off td span { text-decoration: line-through; }
+.btn-infra-all {
+  margin-left: 6px; padding: 2px 8px; font-size: 11px; border: 1px solid #d1d5db;
+  border-radius: 6px; background: #fff; color: inherit; cursor: pointer;
+}
+.btn-infra-all:hover { background: #f3f4f6; }
+
+.top-nav { display: flex; gap: 6px; padding: 10px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-light); font-family: var(--font-sans); }
+.top-nav a { padding: 6px 14px; border-radius: var(--radius-md); color: var(--text-muted); text-decoration: none; font-size: 14px; font-weight: 500; }
+.top-nav a:hover { background: var(--bg-hover); }
+.top-nav a.active { background: var(--primary-blue-light); color: var(--primary-blue); }
+.how-grid { display: grid; gap: 14px; }
+.how-card { padding: 16px 20px; }
+.how-card h3 { margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+.how-num { display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-blue); color: #fff; font-size: 12px; }
+.how-card code { display: block; margin: 6px 0; padding: 8px 10px; background: var(--bg-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 13px; overflow-wrap: anywhere; }
+.how-card p, .how-card li { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+.how-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+.how-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-subtle); }
+
+.how-table th { text-align: left; padding: 5px 8px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border-light); }
+.how-card { overflow-x: auto; }
+
+.cap-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 10px; }
+.cap-fixed { font-size: 12px; color: var(--text-muted); }
+.cap-scroll { overflow-x: auto; }
+.cap-table { min-width: 760px; }
+.cap-table td, .cap-table th { white-space: nowrap; }
+tr.cap-upgrade td { background: var(--accent-indigo-light); }
+.cap-note { font-size: 12px; color: var(--text-muted); }
+
+.cap-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cap-inputs label, .cap-sub { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted); }
+.cap-check { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 14px; color: var(--text-secondary); }
+.cap-sub { margin: 4px 0 8px 26px; }
+.cap-bar-wrap { margin: 8px 0; }
+.cap-bar { height: 10px; border-radius: 6px; background: var(--border-light); overflow: hidden; }
+.cap-bar-fill { height: 100%; background: var(--primary-blue); }
+.cap-bar-fill.hot { background: var(--danger-rose); }
+.cap-bar-label { font-size: 12px; color: var(--text-muted); }
+tr.cap-total td { font-weight: 700; background: var(--bg-subtle); }
+@media (max-width: 900px) { .cap-inputs { grid-template-columns: 1fr; } }
