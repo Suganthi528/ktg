@@ -60,17 +60,17 @@ export function calculate(inp, r) {
   const dbPlan = pick(r.dbPlans, clients / 10 + users * 2 + tracked * 20);
 
   const share = mode === 'shared' ? 1 / r.sharedTenants : 1;
-  const autoLinode = plan.usd * fx * share;
-  const autoLinodeBackup = backup ? plan.usd * (r.linodeBackupPct / 100) * fx * share : 0;
-  const autoDb = dbPlan.usd * fx * share;
+  const autoLinode = Math.round(plan.usd * fx * share);
+  const autoLinodeBackup = backup ? Math.round(plan.usd * (r.linodeBackupPct / 100) * fx * share) : 0;
+  const autoDb = Math.round(dbPlan.usd * fx * share);
 
   const dataGB = (clients * r.mbPerClient) / 1024 + tracked * 0.3;
   const storageGB = backup ? dataGB * 3 : dataGB; // 3 retained backup copies
   const extra = Math.max(0, storageGB - 250);
-  const autoStorage = (r.spacesUsdPer250GB + extra * r.spacesExtraUsdPerGB) * fx * share;
+  const autoStorage = Math.round((r.spacesUsdPer250GB + extra * r.spacesExtraUsdPerGB) * fx * share);
 
   const mapLoads = tracked * r.mapLoadsPerUserPerDay * r.workDaysPerMonth;
-  const autoMap = (mapLoads / 1000) * r.mapUsdPer1000 * fx;
+  const autoMap = Math.round((mapLoads / 1000) * r.mapUsdPer1000 * fx);
 
   const off = inp.infraOff || {};
   const linode = ovr.linode !== undefined ? ovr.linode : (off.linode ? 0 : autoLinode);
@@ -81,7 +81,7 @@ export function calculate(inp, r) {
 
   const autoInfra = linode + linodeBackup + db + storage + map;
   const infra = ovr.infra !== undefined ? ovr.infra : autoInfra;
-  const autoMarkup = infra * (r.markupPct / 100);
+  const autoMarkup = Math.round(infra * (r.markupPct / 100));
   const markup = ovr.markup !== undefined ? ovr.markup : autoMarkup;
 
   const autoFees =
@@ -95,10 +95,10 @@ export function calculate(inp, r) {
   const autoOneTime = markup + fees; // markup + user/branch/client/module fees are one-time
   const oneTime = ovr.oneTime !== undefined ? ovr.oneTime : autoOneTime;
 
-  const autoYearGross = monthly * 12;
+  const autoYearGross = Math.round(monthly * 12);
   const yearGross = ovr.yearGross !== undefined ? ovr.yearGross : autoYearGross;
 
-  const autoYearly = yearGross * (1 - r.yearDiscountPct / 100);
+  const autoYearly = Math.round(yearGross * (1 - r.yearDiscountPct / 100));
   const yearly = ovr.yearly !== undefined ? ovr.yearly : autoYearly;
 
   const setupFee = ovr.setupFee !== undefined ? ovr.setupFee : r.setupFee;
@@ -108,13 +108,13 @@ export function calculate(inp, r) {
   const autoOneTimeBase = oneTime + setupFee;
   const oneTimeBase = ovr.oneTimeBase !== undefined ? ovr.oneTimeBase : autoOneTimeBase;
 
-  const autoGstMonthly = monthly * g;
+  const autoGstMonthly = Math.round(monthly * g);
   const gstMonthly = ovr.gstMonthly !== undefined ? ovr.gstMonthly : autoGstMonthly;
 
-  const autoGstYearly = yearly * g;
+  const autoGstYearly = Math.round(yearly * g);
   const gstYearly = ovr.gstYearly !== undefined ? ovr.gstYearly : autoGstYearly;
 
-  const autoGstOneTime = oneTimeBase * g;
+  const autoGstOneTime = Math.round(oneTimeBase * g);
   const gstOneTime = ovr.gstOneTime !== undefined ? ovr.gstOneTime : autoGstOneTime;
 
   const gst = {

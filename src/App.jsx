@@ -244,7 +244,7 @@ export default function App() {
     setRates({ ...rates, moduleFee: { ...rates.moduleFee, [k]: +e.target.value } });
 
   return (
-    <div className="app-wrapper">
+    <div className="app-wrapper calculator-page">
       {/* Page Header */}
       <header className="app-header">
         <div className="header-icon-box" aria-hidden="true">
@@ -261,131 +261,153 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main 2-Column Grid */}
-      <div className="main-grid">
-        {/* Left: Client Configuration */}
-        <section className="card input">
-          <div className="section-title">
-            <span>Client Configuration</span>
-          </div>
+      {/* Main 2-Column Grid - Equal Width Columns */}
+      <div className="main-grid calculator-main-grid">
+        {/* Left Column: Client Configuration & Saved Quotes */}
+        <div className="calculator-col calculator-left-col">
+          <section className="card input">
+            <div className="section-title">
+              <span>Client Configuration</span>
+            </div>
 
-          <div className="field-group">
-            <label className="field-label" htmlFor="client-name">
-              Client name
-            </label>
-            <input
-              id="client-name"
-              className="input-box"
-              value={inp.client}
-              onChange={set('client')}
-              placeholder="e.g. ABC Finance"
-            />
-          </div>
+            <div className="field-group">
+              <label className="field-label" htmlFor="client-name">
+                Client name
+              </label>
+              <input
+                id="client-name"
+                className="input-box"
+                value={inp.client}
+                onChange={set('client')}
+                placeholder="e.g. ABC Finance"
+              />
+            </div>
 
-          {/* Users, Branches, Clients Metric Cards */}
-          <div className="field-group">
-            <label className="field-label">Scale & Capacity</label>
-            <div className="metrics-grid">
-              <div className="metric-card">
-                <div className="metric-header">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
-                  <span className="metric-label">Users</span>
+            {/* Users, Branches, Clients Metric Cards */}
+            <div className="field-group">
+              <label className="field-label">Scale & Capacity</label>
+              <div className="metrics-grid">
+                <div className="metric-card">
+                  <div className="metric-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span className="metric-label">Users</span>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    className="metric-input"
+                    value={inp.users}
+                    onChange={set('users')}
+                  />
                 </div>
-                <input
-                  type="number"
-                  min="0"
-                  className="metric-input"
-                  value={inp.users}
-                  onChange={set('users')}
-                />
-              </div>
 
-              <div className="metric-card">
-                <div className="metric-header">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                  </svg>
-                  <span className="metric-label">Branches</span>
+                <div className="metric-card">
+                  <div className="metric-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span className="metric-label">Branches</span>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    className="metric-input"
+                    value={inp.branches}
+                    onChange={set('branches')}
+                  />
                 </div>
-                <input
-                  type="number"
-                  min="0"
-                  className="metric-input"
-                  value={inp.branches}
-                  onChange={set('branches')}
-                />
-              </div>
 
-              <div className="metric-card">
-                <div className="metric-header">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                  <span className="metric-label">Clients</span>
+                <div className="metric-card">
+                  <div className="metric-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <span className="metric-label">Clients</span>
+                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    className="metric-input"
+                    value={inp.clients}
+                    onChange={set('clients')}
+                  />
                 </div>
-                <input
-                  type="number"
-                  min="0"
-                  className="metric-input"
-                  value={inp.clients}
-                  onChange={set('clients')}
-                />
               </div>
             </div>
-          </div>
 
-          {/* Modules */}
-          <div className="field-group">
-            <div className="section-title" style={{ marginTop: '12px' }}>
-              <span>Modules</span>
-            </div>
-            <div className="modules-container">
-              {/* Server backup */}
-              <label className={`module-toggle-card ${inp.backup ? 'active' : ''}`}>
-                <div className="module-info">
-                  <div className="module-icon-wrap">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                      <polyline points="7 3 7 8 15 8"></polyline>
-                    </svg>
+            {/* Modules */}
+            <div className="field-group modules-field-group">
+              <div className="section-title">
+                <span>Modules</span>
+              </div>
+              <div className="modules-container">
+                {/* Server backup */}
+                <label className={`module-toggle-card ${inp.backup ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">Server backup</span>
+                      <span className="module-hint">Automated retention & snapshots</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="module-title">Server backup</span>
-                    <span className="module-hint">Automated retention & snapshots</span>
-                  </div>
-                </div>
-                <span className="switch">
-                  <input type="checkbox" checked={inp.backup} onChange={set('backup')} />
-                  <span className="slider"></span>
-                </span>
-              </label>
+                  <span className="switch">
+                    <input type="checkbox" checked={inp.backup} onChange={set('backup')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
 
-              {/* Live tracking */}
-              <label className={`module-toggle-card ${inp.tracking ? 'active' : ''}`}>
-                <div className="module-info">
-                  <div className="module-icon-wrap">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-                    </svg>
+                {/* Live tracking */}
+                <label className={`module-toggle-card ${inp.tracking ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">Live tracking (adds map charge)</span>
+                      <span className="module-hint">Location tracking and route history</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="module-title">Live tracking (adds map charge)</span>
-                    <span className="module-hint">Location tracking and route history</span>
+                  <span className="switch">
+                    <input type="checkbox" checked={inp.tracking} onChange={set('tracking')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
+
+                {/* MFI module */}
+                <label className={`module-toggle-card ${inp.mfi ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">MFI module</span>
+                      <span className="module-hint">Loan cycles, collections & center meetings</span>
+                    </div>
                   </div>
-                </div>
-                <span className="switch">
-                  <input type="checkbox" checked={inp.tracking} onChange={set('tracking')} />
-                  <span className="slider"></span>
-                </span>
-              </label>
+                  <span className="switch">
+                    <input type="checkbox" checked={inp.mfi} onChange={set('mfi')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
+              </div>
 
               {/* Users tracked live (sub-field) */}
               {inp.tracking && (
@@ -403,44 +425,116 @@ export default function App() {
                   />
                 </div>
               )}
-
-              {/* MFI module */}
-              <label className={`module-toggle-card ${inp.mfi ? 'active' : ''}`}>
-                <div className="module-info">
-                  <div className="module-icon-wrap">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="12" y1="1" x2="12" y2="23"></line>
-                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <span className="module-title">MFI module</span>
-                    <span className="module-hint">Loan cycles, collections & center meetings</span>
-                  </div>
-                </div>
-                <span className="switch">
-                  <input type="checkbox" checked={inp.mfi} onChange={set('mfi')} />
-                  <span className="slider"></span>
-                </span>
-              </label>
             </div>
-          </div>
 
-          <button
-            type="button"
-            className="btn-toggle-rates"
-            onClick={() => setShow(!show)}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-            <span>{show ? 'Hide' : 'Edit'} rates &amp; assumptions</span>
-          </button>
-        </section>
+            <button
+              type="button"
+              className="btn-toggle-rates"
+              onClick={() => setShow(!show)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              <span>{show ? 'Hide' : 'Edit'} rates &amp; assumptions</span>
+            </button>
+          </section>
 
-        {/* Right: Quote Summary */}
-        <section className="card result">
+          {/* Saved Quotes Section - Embedded in Left Column */}
+          <section className="card saved saved-section">
+            <div className="saved-header">
+              <div className="saved-title-group">
+                <div className="section-title" style={{ margin: 0 }}>
+                  <span>Saved quotes</span>
+                </div>
+                <span className="saved-count-pill">{quotes.length}</span>
+              </div>
+              <div className="search-box-wrap">
+                <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search client..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {grouped.length === 0 ? (
+              <div className="empty-state">
+                <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <p>No saved quotes yet.</p>
+              </div>
+            ) : (
+              <div className="saved-groups-container">
+                {grouped.map(([client, list]) => (
+                  <div key={client} className="saved-client-card">
+                    <div className="saved-client-header">
+                      <span className="saved-client-name">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                        {client}
+                      </span>
+                      <span className="saved-count-pill">{list.length} quote{list.length > 1 ? 's' : ''}</span>
+                    </div>
+                    <table className="saved-items-table">
+                      <tbody>
+                        {list.map((q) => (
+                          <tr key={q.id}>
+                            <td className="saved-details-cell">
+                              <span className="saved-date">{new Date(q.date).toLocaleDateString()}</span>
+                              <span className="saved-specs">
+                                {q.inp.users}u / {q.inp.branches}b / {q.inp.clients}c
+                              </span>
+                              <span className="saved-plan">· {q.plan}</span>
+                            </td>
+                            <td className="saved-price-cell">
+                              <b>{inr(q.monthly)}/mo</b>
+                              <small>{inr(q.yearly)}/yr</small>
+                            </td>
+                            <td className="saved-actions-cell">
+                              <button
+                                type="button"
+                                className="btn-action-open"
+                                onClick={() => openQuote(q)}
+                                title="Open quote & print/save PDF"
+                              >
+                                Open PDF
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-action-del"
+                                onClick={() => delQuote(q.id)}
+                              >
+                                Delete
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        {/* Right Column: Quote Summary */}
+        <div className="calculator-col calculator-right-col">
+          <section className="card result">
           <div className="quote-top-bar">
             <div className="quote-title-group">
               <div className="quote-print-brand">Server Price Calculator</div>
@@ -662,7 +756,7 @@ export default function App() {
                     />
                   </td>
                 </tr>
-                <tr className="total-monthly-row">
+                <tr className="total-monthly-row final-payment-row">
                   <td>Monthly payable (incl. GST)</td>
                   <td>
                     <EditableAmount
@@ -674,7 +768,7 @@ export default function App() {
                     />
                   </td>
                 </tr>
-                <tr className="total-monthly-row">
+                <tr className="total-monthly-row final-payment-row">
                   <td>One-time payable (incl. GST)</td>
                   <td>
                     <EditableAmount
@@ -737,157 +831,86 @@ export default function App() {
           </div>
         </section>
       </div>
+    </div>
 
-      {/* Saved Quotes Section */}
-      <section className="card saved saved-section">
-        <div className="saved-header">
-          <div className="saved-title-group">
-            <div className="section-title" style={{ margin: 0 }}>
-              <span>Saved quotes</span>
-            </div>
-            <span className="saved-count-pill">{quotes.length}</span>
-          </div>
-          <div className="search-box-wrap">
-            <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search client..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {grouped.length === 0 ? (
-          <div className="empty-state">
-            <svg className="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            <p>No saved quotes yet.</p>
-          </div>
-        ) : (
-          <div className="saved-groups-container">
-            {grouped.map(([client, list]) => (
-              <div key={client} className="saved-client-card">
-                <div className="saved-client-header">
-                  <span className="saved-client-name">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                    </svg>
-                    {client}
-                  </span>
-                  <span className="saved-count-pill">{list.length} quote{list.length > 1 ? 's' : ''}</span>
-                </div>
-                <table className="saved-items-table">
-                  <tbody>
-                    {list.map((q) => (
-                      <tr key={q.id}>
-                        <td className="saved-details-cell">
-                          <span className="saved-date">{new Date(q.date).toLocaleDateString()}</span>
-                          <span className="saved-specs">
-                            {q.inp.users}u / {q.inp.branches}b / {q.inp.clients}c
-                          </span>
-                          <span className="saved-plan">· {q.plan}</span>
-                        </td>
-                        <td className="saved-price-cell">
-                          <b>{inr(q.monthly)}/mo</b>
-                          <small>{inr(q.yearly)}/yr</small>
-                        </td>
-                        <td className="saved-actions-cell">
-                          <button
-                            type="button"
-                            className="btn-action-open"
-                            onClick={() => openQuote(q)}
-                            title="Open quote & print/save PDF"
-                          >
-                            Open PDF
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-action-del"
-                            onClick={() => delQuote(q.id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Rates & Assumptions Drawer/Card */}
+      {/* Rates & Assumptions Modal Dialog */}
       {show && (
-        <section className="card rates rates-section">
-          <div className="section-title">
-            <span>Rates (INR unless noted)</span>
-          </div>
-          <div className="rates-grid">
-            {RATE_FIELDS.map(([k, label]) => (
-              <div key={k} className="rates-field">
-                <label htmlFor={`rate-${k}`}>{label}</label>
+        <div className="rates-modal-backdrop" onClick={() => setShow(false)}>
+          <div className="card rates rates-section rates-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="rates-modal-header">
+              <div className="section-title" style={{ margin: 0 }}>
+                <span>Rates & Assumptions (INR unless noted)</span>
+              </div>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setShow(false)}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="rates-grid">
+              {RATE_FIELDS.map(([k, label]) => (
+                <div key={k} className="rates-field">
+                  <label htmlFor={`rate-${k}`}>{label}</label>
+                  <input
+                    id={`rate-${k}`}
+                    type="number"
+                    value={rates[k]}
+                    onChange={rate(k)}
+                  />
+                </div>
+              ))}
+              <div className="rates-field">
+                <label htmlFor="rate-fee-backup">Backup fee</label>
                 <input
-                  id={`rate-${k}`}
+                  id="rate-fee-backup"
                   type="number"
-                  value={rates[k]}
-                  onChange={rate(k)}
+                  value={rates.moduleFee.backup}
+                  onChange={fee('backup')}
                 />
               </div>
-            ))}
-            <div className="rates-field">
-              <label htmlFor="rate-fee-backup">Backup fee</label>
-              <input
-                id="rate-fee-backup"
-                type="number"
-                value={rates.moduleFee.backup}
-                onChange={fee('backup')}
-              />
+              <div className="rates-field">
+                <label htmlFor="rate-fee-tracking">Tracking fee</label>
+                <input
+                  id="rate-fee-tracking"
+                  type="number"
+                  value={rates.moduleFee.tracking}
+                  onChange={fee('tracking')}
+                />
+              </div>
+              <div className="rates-field">
+                <label htmlFor="rate-fee-mfi">MFI fee</label>
+                <input
+                  id="rate-fee-mfi"
+                  type="number"
+                  value={rates.moduleFee.mfi}
+                  onChange={fee('mfi')}
+                />
+              </div>
             </div>
-            <div className="rates-field">
-              <label htmlFor="rate-fee-tracking">Tracking fee</label>
-              <input
-                id="rate-fee-tracking"
-                type="number"
-                value={rates.moduleFee.tracking}
-                onChange={fee('tracking')}
-              />
-            </div>
-            <div className="rates-field">
-              <label htmlFor="rate-fee-mfi">MFI fee</label>
-              <input
-                id="rate-fee-mfi"
-                type="number"
-                value={rates.moduleFee.mfi}
-                onChange={fee('mfi')}
-              />
+            <div className="rates-footer">
+              <button
+                type="button"
+                className="btn-reset-rates"
+                onClick={() => setRates(DEFAULT_RATES)}
+              >
+                Reset to defaults
+              </button>
+              <button
+                type="button"
+                className="btn-primary btn-modal-done"
+                onClick={() => setShow(false)}
+              >
+                Done
+              </button>
+              <p className="rates-note">
+                Server plan sizes/prices live in <code>src/pricing.js</code> (Linode plans, DigitalOcean DB plans).
+              </p>
             </div>
           </div>
-          <div className="rates-footer">
-            <button
-              type="button"
-              className="btn-reset-rates"
-              onClick={() => setRates(DEFAULT_RATES)}
-            >
-              Reset to defaults
-            </button>
-            <p className="rates-note">
-              Server plan sizes/prices live in <code>src/pricing.js</code> (Linode plans, DigitalOcean DB plans).
-            </p>
-          </div>
-        </section>
+        </div>
       )}
     </div>
   );
