@@ -1,9 +1,15 @@
 import { useState } from 'react';
-import { DEFAULT_RATES } from './pricing.js';
+import { DEFAULT_RATES } from '../models/pricing.model.js';
 
 const getRates = () => {
   try {
     const saved = JSON.parse(localStorage.getItem('sp_rates')) || {};
+    if (!saved.usdToInr || saved.usdToInr === 85) {
+      saved.usdToInr = 93;
+      try {
+        localStorage.setItem('sp_rates', JSON.stringify({ ...DEFAULT_RATES, ...saved }));
+      } catch {}
+    }
     const plans = (saved.plans && saved.plans.length >= DEFAULT_RATES.plans.length)
       ? saved.plans
       : DEFAULT_RATES.plans;
@@ -28,7 +34,7 @@ export default function HowItWorks() {
   const r = getRates();
   const [activeTab, setActiveTab] = useState('all');
   const money = (n) => '₹' + Number(n).toLocaleString('en-IN');
-  const fx = r.usdToInr || 85;
+  const fx = r.usdToInr || 93;
 
   const exampleLoads = 5 * r.mapLoadsPerUserPerDay * r.workDaysPerMonth;
   const exampleUsd = (exampleLoads / 1000) * r.mapUsdPer1000;

@@ -1459,7 +1459,9 @@ input:checked + .slider:before {
   .rates-section,
   .btn-toggle-rates,
   .btn-infra-all,
-  .margin-callout {
+  .margin-callout,
+  .billing-cycle-toggle-bar,
+  .cycle-selected-badge {
     display: none !important;
   }
 
@@ -4510,6 +4512,9 @@ tr.infra-off td span { text-decoration: line-through; }
   .calculator-page .calculator-left-col,
   .customer-view-page .calculator-left-col {
     gap: 10px;
+    overflow-y: auto !important;
+    padding-right: 4px;
+    height: 100%;
   }
 
   .calculator-page .calculator-left-col .card.input,
@@ -4696,11 +4701,11 @@ tr.infra-off td span { text-decoration: line-through; }
   /* Left Column: Saved Quotes Section */
   .calculator-page .calculator-left-col .card.saved,
   .customer-view-page .calculator-left-col .card.saved {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    padding: 10px 14px;
+    flex: 1 0 auto !important;
+    min-height: 260px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 12px 14px !important;
     border-radius: 12px;
     overflow: hidden;
     margin-top: 0;
@@ -4708,62 +4713,142 @@ tr.infra-off td span { text-decoration: line-through; }
 
   .calculator-page .calculator-left-col .saved-header,
   .customer-view-page .calculator-left-col .saved-header {
-    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
     flex-shrink: 0;
+    gap: 8px;
   }
 
   .calculator-page .calculator-left-col .search-box-wrap,
   .customer-view-page .calculator-left-col .search-box-wrap {
-    padding: 3px 8px;
+    position: relative !important;
+    width: 190px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .calculator-page .calculator-left-col .search-box-wrap .search-icon,
+  .customer-view-page .calculator-left-col .search-box-wrap .search-icon {
+    position: absolute !important;
+    left: 9px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 13px !important;
+    height: 13px !important;
+    color: #0d9488 !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
   }
 
   .calculator-page .calculator-left-col .search-input,
   .customer-view-page .calculator-left-col .search-input {
-    font-size: 11.5px;
-    padding: 2px 4px;
+    font-size: 11.5px !important;
+    padding: 5px 10px 5px 28px !important;
+    width: 100% !important;
+    border: 1px solid #ccfbf1 !important;
+    border-radius: 6px !important;
+    outline: none !important;
+    background-color: #ffffff !important;
+    box-sizing: border-box !important;
+    line-height: 1.4 !important;
+  }
+
+  .calculator-page .calculator-left-col .search-input:focus,
+  .customer-view-page .calculator-left-col .search-input:focus {
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15) !important;
   }
 
   .calculator-page .calculator-left-col .saved-groups-container,
   .customer-view-page .calculator-left-col .saved-groups-container {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
+    flex: 1 1 auto !important;
+    min-height: 140px !important;
+    overflow-y: auto !important;
     padding-right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .calculator-page .calculator-left-col .saved-client-card,
   .customer-view-page .calculator-left-col .saved-client-card {
-    margin-bottom: 6px;
-    border-radius: 8px;
+    margin-bottom: 0 !important;
+    border-radius: 10px !important;
+    border: 1px solid #ccfbf1 !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(13, 148, 136, 0.05) !important;
+    flex-shrink: 0 !important;
   }
 
   .calculator-page .calculator-left-col .saved-client-header,
   .customer-view-page .calculator-left-col .saved-client-header {
-    padding: 4px 8px;
-    font-size: 11.5px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+    background: #f0fdfa !important;
+    border-bottom: 1px solid #ccfbf1 !important;
+    min-height: 32px !important;
+    box-sizing: border-box !important;
+  }
+
+  .calculator-page .calculator-left-col .saved-client-name,
+  .customer-view-page .calculator-left-col .saved-client-name {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #0f766e !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    line-height: 1.3 !important;
+  }
+
+  .calculator-page .calculator-left-col .saved-items-table,
+  .customer-view-page .calculator-left-col .saved-items-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .calculator-page .calculator-left-col .saved-items-table tr,
+  .customer-view-page .calculator-left-col .saved-items-table tr {
+    border-bottom: 1px solid #f0fdfa !important;
+  }
+
+  .calculator-page .calculator-left-col .saved-items-table tr:last-child,
+  .customer-view-page .calculator-left-col .saved-items-table tr:last-child {
+    border-bottom: none !important;
   }
 
   .calculator-page .calculator-left-col .saved-items-table td,
   .customer-view-page .calculator-left-col .saved-items-table td {
-    padding: 4px 6px;
+    padding: 6px 8px !important;
+    vertical-align: middle !important;
   }
 
   .calculator-page .calculator-left-col .saved-specs,
   .customer-view-page .calculator-left-col .saved-specs {
-    font-size: 11px;
+    font-size: 11px !important;
+    color: #475569 !important;
   }
 
   .calculator-page .calculator-left-col .saved-price-cell b,
   .customer-view-page .calculator-left-col .saved-price-cell b {
-    font-size: 11.5px;
+    font-size: 11.5px !important;
+    color: #0f766e !important;
   }
 
   .calculator-page .calculator-left-col .btn-action-open,
   .customer-view-page .calculator-left-col .btn-action-open,
   .calculator-page .calculator-left-col .btn-action-del,
   .customer-view-page .calculator-left-col .btn-action-del {
-    padding: 2px 6px;
-    font-size: 10.5px;
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+    border-radius: 5px !important;
   }
 
   /* Right Column: Quote Summary Card */
@@ -5021,6 +5106,28 @@ tr.infra-off td span { text-decoration: line-through; }
   }
   .rates-modal-backdrop {
     display: none !important;
+  }
+
+  /* Hide Payable View toggle bar in print */
+  .billing-cycle-toggle-bar {
+    display: none !important;
+  }
+
+  /* Hide Monthly / Yearly active highlight and badge in print */
+  .cycle-selected-badge {
+    display: none !important;
+  }
+
+  .price-box.selected-cycle {
+    box-shadow: none !important;
+    border-color: #e2e8f0 !important;
+    background: #ffffff !important;
+  }
+
+  .price-box.clickable {
+    cursor: default !important;
+    transform: none !important;
+    box-shadow: none !important;
   }
 }
 
@@ -5457,3 +5564,810 @@ tr.infra-off td span { text-decoration: line-through; }
   color: #be123c !important;
   border: 1px solid #fecdd3 !important;
 }
+
+/* ==========================================================================
+   MOBILE & ALL VIEWPORTS COMPREHENSIVE RESPONSIVENESS
+   Ensures seamless calculation, visibility, touch controls, and clean layout
+   across all mobile viewports (320px, 360px, 375px, 414px, 480px, 600px, 768px)
+   while preserving desktop fit-page layout (min-width: 901px).
+   ========================================================================== */
+
+/* 1. Global Viewport & Top Navigation */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.top-nav {
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  max-width: 100% !important;
+}
+
+.top-nav::-webkit-scrollbar {
+  display: none !important;
+}
+
+.top-nav a {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* 2. Calculator & Customer View Pages on Screens <= 900px */
+@media (max-width: 900px) {
+  .calculator-page,
+  .customer-view-page {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 10px 10px 48px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+  }
+
+  .calculator-page .app-header,
+  .customer-view-page .app-header {
+    margin-bottom: 12px !important;
+    flex-shrink: 0 !important;
+    gap: 10px !important;
+  }
+
+  .calculator-page .header-text h1,
+  .customer-view-page .header-text h1 {
+    font-size: 18px !important;
+  }
+
+  .calculator-page .header-text p,
+  .customer-view-page .header-text p {
+    font-size: 12px !important;
+  }
+
+  .calculator-page .main-grid.calculator-main-grid,
+  .customer-view-page .main-grid.calculator-main-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* Reorder columns using display: contents:
+     1) card input (Client name, Users/Branches/Clients, Modules)
+     2) card result (Quote with calculated price, breakdowns, Save & Print buttons)
+     3) card saved (Saved quotes history)
+  */
+  .calculator-page .calculator-left-col,
+  .customer-view-page .calculator-left-col {
+    display: contents !important;
+  }
+
+  .calculator-page .calculator-left-col .card.input,
+  .customer-view-page .calculator-left-col .card.input {
+    order: 1 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 0 !important;
+    padding: 14px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .calculator-page .calculator-right-col,
+  .customer-view-page .calculator-right-col {
+    order: 2 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin-bottom: 0 !important;
+  }
+
+  .calculator-page .calculator-right-col .card.result,
+  .customer-view-page .calculator-right-col .card.result {
+    height: auto !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    padding: 14px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .calculator-page .calculator-left-col .card.saved,
+  .customer-view-page .calculator-left-col .card.saved {
+    order: 3 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 480px !important;
+    box-sizing: border-box !important;
+    margin-top: 0 !important;
+    padding: 14px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  .calculator-page .saved-groups-container,
+  .customer-view-page .saved-groups-container {
+    max-height: 320px !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* 3. Small Screens & Mobile Viewports (<= 640px) */
+@media (max-width: 640px) {
+  /* Scale & Capacity Metrics Grid: 3 equal columns */
+  .calculator-page .metrics-grid,
+  .customer-view-page .metrics-grid,
+  .metrics-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .calculator-page .metric-card,
+  .customer-view-page .metric-card {
+    padding: 6px 6px !important;
+    min-width: 0 !important;
+  }
+
+  .calculator-page .metric-header,
+  .customer-view-page .metric-header {
+    gap: 4px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .calculator-page .metric-header svg,
+  .customer-view-page .metric-header svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  .calculator-page .metric-label,
+  .customer-view-page .metric-label {
+    font-size: 10px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .calculator-page .metric-input,
+  .customer-view-page .metric-input {
+    font-size: 16px !important;
+    padding: 2px 4px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Modules Container on Mobile: Clean vertical stack with full touch target */
+  .calculator-page .modules-container,
+  .customer-view-page .modules-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-bottom: 8px !important;
+  }
+
+  .calculator-page .module-toggle-card,
+  .customer-view-page .module-toggle-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 9px 12px !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 10px !important;
+  }
+
+  .calculator-page .module-info,
+  .customer-view-page .module-info {
+    min-width: 0 !important;
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .calculator-page .module-icon-wrap,
+  .customer-view-page .module-icon-wrap {
+    width: 26px !important;
+    height: 26px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .calculator-page .module-title,
+  .customer-view-page .module-title {
+    font-size: 12px !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+  }
+
+  .calculator-page .module-hint,
+  .customer-view-page .module-hint {
+    display: block !important;
+    font-size: 10px !important;
+    color: #64748b !important;
+    line-height: 1.2 !important;
+    margin-top: 1px !important;
+  }
+
+  .calculator-page .switch,
+  .customer-view-page .switch {
+    flex-shrink: 0 !important;
+    width: 38px !important;
+    height: 20px !important;
+  }
+
+  .calculator-page .sub-input-wrap,
+  .customer-view-page .sub-input-wrap {
+    padding: 6px 10px !important;
+    margin-top: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Dual Pricing Cards (Monthly & Yearly) */
+  .calculator-page .pricing-dual-grid,
+  .customer-view-page .pricing-dual-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+    width: 100% !important;
+  }
+
+  .calculator-page .price-box,
+  .customer-view-page .price-box {
+    padding: 8px 10px !important;
+    min-width: 0 !important;
+    border-radius: 10px !important;
+  }
+
+  .calculator-page .price-box-title,
+  .customer-view-page .price-box-title {
+    font-size: 11px !important;
+  }
+
+  .calculator-page .price-box-val,
+  .customer-view-page .price-box-val {
+    font-size: 16px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  .calculator-page .price-box small,
+  .customer-view-page .price-box small {
+    font-size: 9.5px !important;
+  }
+
+  /* Breakdown Table & Editable Controls */
+  .calculator-page .breakdown-table-wrapper,
+  .customer-view-page .breakdown-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .calculator-page .breakdown-table,
+  .customer-view-page .breakdown-table {
+    width: 100% !important;
+    min-width: 290px !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+  }
+
+  .calculator-page .breakdown-table td,
+  .customer-view-page .breakdown-table td {
+    padding: 6px 6px !important;
+    font-size: 11.5px !important;
+  }
+
+  .calculator-page .breakdown-table td:first-child,
+  .customer-view-page .breakdown-table td:first-child {
+    min-width: 140px !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .calculator-page .breakdown-table td:last-child,
+  .customer-view-page .breakdown-table td:last-child {
+    min-width: 90px !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+    font-size: 12px !important;
+  }
+
+  .editable-text-wrap {
+    max-width: 100% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+  }
+
+  .editable-text-input {
+    max-width: 150px !important;
+    font-size: 11px !important;
+    padding: 2px 4px !important;
+  }
+
+  .editable-amount-input {
+    max-width: 75px !important;
+    font-size: 11px !important;
+    padding: 2px 4px !important;
+  }
+
+  /* Action Buttons Bar */
+  .calculator-page .action-buttons-bar,
+  .customer-view-page .action-buttons-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+  }
+
+  .calculator-page .action-buttons-bar .btn-primary,
+  .customer-view-page .action-buttons-bar .btn-primary,
+  .calculator-page .action-buttons-bar .btn-secondary,
+  .customer-view-page .action-buttons-bar .btn-secondary {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 9px 14px !important;
+    font-size: 12.5px !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* 4. Rates & Assumptions Modal on Mobile */
+@media (max-width: 640px) {
+  .rates-modal {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    max-height: 90vh !important;
+    padding: 14px 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .rates-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .rates-modal-header h3 {
+    font-size: 15px !important;
+  }
+
+  .rates-modal-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .rates-modal-actions button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* 5. Capacity & How It's Calculated Pages Mobile Enhancements */
+.how-nav-bar,
+.cap-view-bar {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  max-width: 100% !important;
+}
+
+.how-nav-bar::-webkit-scrollbar,
+.cap-view-bar::-webkit-scrollbar {
+  display: none !important;
+}
+
+.how-nav-pills,
+.cap-view-pills {
+  flex-wrap: nowrap !important;
+  min-width: max-content !important;
+}
+
+.how-nav-pill,
+.cap-view-pill {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+.cap-table-wrapper,
+.how-table-wrapper,
+.cap-scroll {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.cap-table,
+.how-table {
+  min-width: 480px !important;
+}
+
+@media (max-width: 640px) {
+  .cap-driver-control-wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .cap-driver-pills {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .cap-driver-pill {
+    flex: 1 1 auto !important;
+    text-align: center !important;
+  }
+
+  .how-example-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .cap-hero-ribbon,
+  .how-rates-ribbon {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .cap-hero-ribbon,
+  .how-rates-ribbon {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ==========================================================================
+   NEW MODULES, COMPANY DETAILS & BACKUP SECTION STYLES
+   ========================================================================== */
+
+/* Company & Contact No Inputs Row */
+.client-fields-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 640px) {
+  .client-fields-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+/* Quote Company Spec Summary Card */
+.quote-company-spec-card {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.quote-spec-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.quote-spec-k {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #0f766e;
+  letter-spacing: 0.03em;
+  margin-bottom: 1px;
+}
+
+.quote-spec-v {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .quote-company-spec-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  .quote-spec-item:first-child {
+    grid-column: span 2;
+  }
+}
+
+/* Backup Separate Section */
+.backup-field-group {
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+
+.backup-section-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fcfdfe;
+  border: 1px solid #e0f2f1;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.backup-toggle-card {
+  margin-bottom: 0 !important;
+  background: #ffffff !important;
+}
+
+.backup-freq-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px 4px;
+  background: #ffffff;
+  border: 1px dashed #99f6e4;
+  border-radius: 8px;
+}
+
+.backup-freq-header-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.backup-freq-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+@media (max-width: 640px) {
+  .backup-freq-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+}
+
+.backup-freq-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 8px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.backup-freq-btn:hover {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+}
+
+.backup-freq-btn.active {
+  background: #e6fffa;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 1px #0d9488;
+}
+
+.backup-freq-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 4px;
+}
+
+.backup-freq-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.backup-freq-btn.active .backup-freq-name {
+  color: #0f766e;
+}
+
+.backup-freq-badge {
+  font-size: 9px;
+  font-weight: 700;
+  background: #0d9488;
+  color: #ffffff;
+  padding: 1px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.backup-freq-sub {
+  font-size: 9.5px;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.backup-freq-btn.active .backup-freq-sub {
+  color: #0f766e;
+}
+
+/* Modules container 2-column grid on desktop */
+@media (min-width: 901px) {
+  .calculator-page .calculator-left-col .modules-container,
+  .customer-view-page .calculator-left-col .modules-container {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+  }
+}
+
+/* ==========================================================================
+   CUSTOMER SETTINGS & YEARLY 1-MONTH DISCOUNT PRICE STYLES
+   ========================================================================== */
+
+/* Top Nav active tab highlight for Customer */
+.top-nav a[href="#/customer-page"].active {
+  background: #e6fffa !important;
+  color: #0f766e !important;
+  box-shadow: inset 0 0 0 1px #99f6e4 !important;
+  font-weight: 600 !important;
+}
+
+/* Billing Cycle Selection in Customer Settings */
+.billing-cycle-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.cycle-option-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cycle-option-card:hover {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+}
+
+.cycle-option-card.active {
+  background: #f0fdfa;
+  border-color: #0d9488;
+  box-shadow: 0 0 0 1px #0d9488;
+}
+
+.cycle-option-card input[type="radio"] {
+  margin-top: 3px;
+  accent-color: #0d9488;
+  cursor: pointer;
+}
+
+.cycle-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cycle-option-text b {
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.cycle-option-text span {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+/* Clickable Dual Pricing Cards in Customer Page */
+.price-box.clickable {
+  transition: all 0.2s ease;
+}
+
+.price-box.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.15);
+}
+
+.price-box.selected-cycle {
+  border-color: #0d9488 !important;
+  box-shadow: 0 0 0 2.5px #0d9488 !important;
+  background: linear-gradient(145deg, #ffffff 0%, #f0fdfa 100%) !important;
+}
+
+.cycle-selected-badge {
+  background: #0d9488;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+/* Billing Cycle Toggle Bar in Customer Screen */
+.billing-cycle-toggle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.billing-cycle-toggle-bar .toggle-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.billing-cycle-toggle-bar .toggle-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cycle-toggle-btn {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cycle-toggle-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.cycle-toggle-btn.active {
+  background: #0d9488;
+  color: #ffffff;
+  border-color: #0d9488;
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+}
+
+
+
+
+

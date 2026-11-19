@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DEFAULT_RATES, calculate } from './pricing.js';
+import { DEFAULT_RATES, calculate } from '../models/pricing.model.js';
 
 const BASE = {
   client: '',
@@ -9,7 +9,7 @@ const BASE = {
   clients: 500,
   backup: true,
   tracking: true,
-  trackedUsers: 5,
+  trackedUsers: 10,
   mfi: true,
 };
 
@@ -94,7 +94,26 @@ export default function Capacity() {
     } else {
       val = t.value;
     }
-    setInp((prev) => ({ ...prev, [k]: val }));
+    setInp((prev) => {
+      const updated = { ...prev, [k]: val };
+      if (k === 'users') {
+        const wasSynced =
+          Number(prev.trackedUsers) === Number(prev.users) ||
+          prev.trackedUsers === undefined ||
+          prev.trackedUsers === '' ||
+          !prev.trackedUsersManual;
+        if (wasSynced) {
+          updated.trackedUsers = val;
+        }
+      }
+      if (k === 'trackedUsers') {
+        updated.trackedUsersManual = val !== '' && Number(val) !== Number(prev.users);
+      }
+      if (k === 'tracking' && val === true && (!prev.trackedUsers || prev.trackedUsers === 0)) {
+        updated.trackedUsers = prev.users || 10;
+      }
+      return updated;
+    });
   };
 
   const applyPreset = (p) => {

@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DEFAULT_RATES, calculate } from './pricing.js';
+import { DEFAULT_RATES, calculate } from '../models/pricing.model.js';
+import {
+  fetchQuotesApi,
+  saveQuoteApi,
+  deleteQuoteApi,
+  fetchRatesApi,
+  saveRatesApi,
+} from '../models/api.model.js';
 
 let FX = 85;
 const inr = (n) =>
@@ -132,6 +139,9 @@ const loadQuotes = () => {
 const loadRates = () => {
   try {
     const saved = JSON.parse(localStorage.getItem('sp_rates')) || {};
+    if (!saved.usdToInr || saved.usdToInr === 85) {
+      saved.usdToInr = 93;
+    }
     const plans = (saved.plans && saved.plans.length >= DEFAULT_RATES.plans.length)
       ? saved.plans
       : DEFAULT_RATES.plans;
@@ -154,14 +164,19 @@ const load = (k, d) => {
 
 const START = {
   client: '',
+  contactNo: '',
   mode: 'separate',
   users: 10,
   branches: 2,
   clients: 500,
   backup: true,
+  backupFreq: 'daily',
   tracking: true,
-  trackedUsers: 5,
+  trackedUsers: 10,
   mfi: true,
+  hr: false,
+  mobileApp: false,
+  jewelLoan: false,
   overrides: {},
   textOverrides: {},
 };
@@ -189,7 +204,21 @@ export default function App() {
   const [quotes, setQuotes] = useState(loadQuotes);
   const [search, setSearch] = useState('');
 
-  FX = rates.usdToInr || 85;
+  FX = rates.usdToInr || 93;
+
+  // Load initial data on mount
+  useEffect(() => {
+    let mounted = true;
+    fetchQuotesApi().then((qs) => {
+      if (mounted && qs && qs.length) setQuotes(qs);
+    });
+    fetchRatesApi().then((r) => {
+      if (mounted && r) setRates((prev) => ({ ...prev, ...r }));
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -209,13 +238,20 @@ export default function App() {
     }
   }, [inp.client]);
 
-  const saveQuote = () => {
+  const saveQuote = async () => {
     if (!inp.client.trim()) {
       alert('Enter a client name first');
       return;
     }
     const q = {
-      id: Date.now(),
+      id: (() => {
+        const nums = quotes
+          .map((q) => parseInt(String(q.id).replace(/^Q/i, ''), 10))
+          .filter((n) => !isNaN(n));
+        const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+        return String(next).padStart(3, '0');
+      })(),
+      client: inp.client.trim(),
       date: new Date().toISOString(),
       inp,
       rates,
@@ -225,6 +261,7 @@ export default function App() {
       dbPlan: res.dbPlan.name,
     };
     setQuotes([q, ...quotes]);
+    await saveQuoteApi(q);
   };
 
   const openQuote = (q) => {
@@ -236,7 +273,10 @@ export default function App() {
     }, 150);
   };
 
-  const delQuote = (id) => setQuotes(quotes.filter((q) => q.id !== id));
+  const delQuote = async (id) => {
+    setQuotes(quotes.filter((q) => q.id !== id));
+    await deleteQuoteApi(id);
+  };
 
   const grouped = useMemo(() => {
     const g = {};
@@ -257,10 +297,31 @@ export default function App() {
       val = t.checked;
     } else if (t.type === 'number') {
       val = t.value === '' ? '' : Math.max(0, +t.value);
+    } else if (k === 'contactNo') {
+      val = t.value.replace(/\D/g, '').slice(0, 10);
     } else {
       val = t.value;
     }
-    setInp((prev) => ({ ...prev, [k]: val }));
+    setInp((prev) => {
+      const updated = { ...prev, [k]: val };
+      if (k === 'users') {
+        const wasSynced =
+          Number(prev.trackedUsers) === Number(prev.users) ||
+          prev.trackedUsers === undefined ||
+          prev.trackedUsers === '' ||
+          !prev.trackedUsersManual;
+        if (wasSynced) {
+          updated.trackedUsers = val;
+        }
+      }
+      if (k === 'trackedUsers') {
+        updated.trackedUsersManual = val !== '' && Number(val) !== Number(prev.users);
+      }
+      if (k === 'tracking' && val === true && (!prev.trackedUsers || prev.trackedUsers === 0)) {
+        updated.trackedUsers = prev.users || 10;
+      }
+      return updated;
+    });
   };
 
   const setOverride = (k, v) => {
@@ -350,20 +411,38 @@ export default function App() {
               <span>Client Configuration</span>
             </div>
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="client-name">
-                Client name
-              </label>
-              <input
-                id="client-name"
-                className="input-box"
-                value={inp.client}
-                onChange={set('client')}
-                placeholder="e.g. ABC Finance"
-              />
+            <div className="client-fields-row">
+              <div className="field-group" style={{ flex: 1, minWidth: 0 }}>
+                <label className="field-label" htmlFor="client-name">
+                  Company Name
+                </label>
+                <input
+                  id="client-name"
+                  className="input-box client-name-input"
+                  value={inp.client}
+                  onChange={set('client')}
+                  placeholder="e.g. ABC Finance Ltd"
+                />
+              </div>
+              <div className="field-group" style={{ flex: 1, minWidth: 0 }}>
+                <label className="field-label" htmlFor="client-contact">
+                  Contact No
+                </label>
+                <input
+                  id="client-contact"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
+                  className="input-box client-name-input"
+                  value={inp.contactNo || ''}
+                  onChange={set('contactNo')}
+                  placeholder="e.g. 9876543210"
+                />
+              </div>
             </div>
 
-            {/* Users, Branches, Clients Metric Cards */}
+            {/* Staff, Branch, Customer Metric Cards */}
             <div className="field-group">
               <label className="field-label">Scale & Capacity</label>
               <div className="metrics-grid">
@@ -375,7 +454,7 @@ export default function App() {
                       <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                       <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
-                    <span className="metric-label">Users</span>
+                    <span className="metric-label">Staff</span>
                   </div>
                   <input
                     type="number"
@@ -392,7 +471,7 @@ export default function App() {
                       <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                       <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                     </svg>
-                    <span className="metric-label">Branches</span>
+                    <span className="metric-label">Branch</span>
                   </div>
                   <input
                     type="number"
@@ -409,7 +488,7 @@ export default function App() {
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    <span className="metric-label">Clients</span>
+                    <span className="metric-label">Customer</span>
                   </div>
                   <input
                     type="number"
@@ -422,33 +501,12 @@ export default function App() {
               </div>
             </div>
 
-            {/* Modules */}
+            {/* Add-on Modules */}
             <div className="field-group modules-field-group">
               <div className="section-title">
-                <span>Modules</span>
+                <span>Add-on Modules</span>
               </div>
-              <div className="modules-container">
-                {/* Server backup */}
-                <label className={`module-toggle-card ${inp.backup ? 'active' : ''}`}>
-                  <div className="module-info">
-                    <div className="module-icon-wrap">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                        <polyline points="7 3 7 8 15 8"></polyline>
-                      </svg>
-                    </div>
-                    <div>
-                      <span className="module-title">Server backup</span>
-                      <span className="module-hint">Automated retention & snapshots</span>
-                    </div>
-                  </div>
-                  <span className="switch">
-                    <input type="checkbox" checked={inp.backup} onChange={set('backup')} />
-                    <span className="slider"></span>
-                  </span>
-                </label>
-
+              <div className="modules-container modules-grid-wrap">
                 {/* Live tracking */}
                 <label className={`module-toggle-card ${inp.tracking ? 'active' : ''}`}>
                   <div className="module-info">
@@ -487,24 +545,145 @@ export default function App() {
                     <span className="slider"></span>
                   </span>
                 </label>
+
+                {/* HR */}
+                <label className={`module-toggle-card ${inp.hr ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <polyline points="17 11 19 13 23 9"></polyline>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">HR</span>
+                      <span className="module-hint">Staff records, payroll & attendance</span>
+                    </div>
+                  </div>
+                  <span className="switch">
+                    <input type="checkbox" checked={!!inp.hr} onChange={set('hr')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
+
+                {/* Mobile app */}
+                <label className={`module-toggle-card ${inp.mobileApp ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">Mobile app</span>
+                      <span className="module-hint">Field collections & customer mobile app</span>
+                    </div>
+                  </div>
+                  <span className="switch">
+                    <input type="checkbox" checked={!!inp.mobileApp} onChange={set('mobileApp')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
+
+                {/* Jewel loan */}
+                <label className={`module-toggle-card ${inp.jewelLoan ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 3h12l4 6-10 12L2 9z"></path>
+                        <path d="M2 9h20"></path>
+                        <path d="M10 3l-2 6 4 12 4-12-2-6"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">Jewel loan</span>
+                      <span className="module-hint">Gold appraisal, interest cycles & pledge custody</span>
+                    </div>
+                  </div>
+                  <span className="switch">
+                    <input type="checkbox" checked={!!inp.jewelLoan} onChange={set('jewelLoan')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
               </div>
 
-              {/* Users tracked live (sub-field) */}
+              {/* Staff tracked live (sub-field) */}
               {inp.tracking && (
                 <div className="sub-input-wrap">
                   <label className="field-label" htmlFor="tracked-users-input">
-                    Users tracked live
+                    Staff tracked live
                   </label>
                   <input
                     id="tracked-users-input"
                     type="number"
                     min="0"
                     className="input-box"
-                    value={inp.trackedUsers}
+                    placeholder={String(inp.users ?? 10)}
+                    value={inp.trackedUsers !== undefined ? inp.trackedUsers : inp.users}
                     onChange={set('trackedUsers')}
                   />
                 </div>
               )}
+            </div>
+
+            {/* Separate Title: Backup */}
+            <div className="field-group backup-field-group">
+              <div className="section-title">
+                <span>Backup</span>
+              </div>
+              <div className="backup-section-card">
+                <label className={`module-toggle-card backup-toggle-card ${inp.backup ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">Automated Server Backup</span>
+                      <span className="module-hint">Database snapshots, archive retention & recovery</span>
+                    </div>
+                  </div>
+                  <span className="switch">
+                    <input type="checkbox" checked={inp.backup} onChange={set('backup')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
+
+                {inp.backup && (
+                  <div className="backup-freq-container">
+                    <div className="backup-freq-header-label">Backup Schedule / Retention:</div>
+                    <div className="backup-freq-grid">
+                      {[
+                        { id: 'daily', label: 'Daily', hint: 'Every 24h' },
+                        { id: 'weekly', label: 'Weekly', hint: 'Weekly retention' },
+                        { id: 'monthly', label: 'Monthly', hint: 'Monthly snapshot' },
+                        { id: 'yearly', label: 'Yearly', hint: 'only 1 month discount', badge: '1 mo discount' },
+                      ].map((item) => {
+                        const isSel = (inp.backupFreq || 'daily') === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`backup-freq-btn ${isSel ? 'active' : ''}`}
+                            onClick={() => setInp({ ...inp, backupFreq: item.id })}
+                          >
+                            <div className="backup-freq-title-row">
+                              <span className="backup-freq-name">{item.label}</span>
+                              {item.badge && <span className="backup-freq-badge">{item.badge}</span>}
+                            </div>
+                            <span className="backup-freq-sub">{item.hint}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <button
@@ -576,7 +755,7 @@ export default function App() {
                             <td className="saved-details-cell">
                               <span className="saved-date">{new Date(q.date).toLocaleDateString()}</span>
                               <span className="saved-specs">
-                                {q.inp.users}u / {q.inp.branches}b / {q.inp.clients}c
+                                {q.inp.users} Staff · {q.inp.branches} Branch · {q.inp.clients} Customer{q.inp.contactNo ? ` · Ph: ${q.inp.contactNo}` : ''}
                               </span>
                               <span className="saved-plan">· {q.plan}</span>
                             </td>
@@ -641,6 +820,30 @@ export default function App() {
             </div>
           </div>
 
+          {/* Company & Client Scope Info */}
+          <div className="quote-company-spec-card">
+            <div className="quote-spec-item">
+              <span className="quote-spec-k">Company Name</span>
+              <span className="quote-spec-v">{inp.client || '—'}</span>
+            </div>
+            <div className="quote-spec-item">
+              <span className="quote-spec-k">Contact No</span>
+              <span className="quote-spec-v">{inp.contactNo || '—'}</span>
+            </div>
+            <div className="quote-spec-item">
+              <span className="quote-spec-k">Branch</span>
+              <span className="quote-spec-v">{inp.branches || 0}</span>
+            </div>
+            <div className="quote-spec-item">
+              <span className="quote-spec-k">Staff</span>
+              <span className="quote-spec-v">{inp.users || 0}</span>
+            </div>
+            <div className="quote-spec-item">
+              <span className="quote-spec-k">Customer</span>
+              <span className="quote-spec-v">{inp.clients || 0}</span>
+            </div>
+          </div>
+
           {/* Prominent Dual Pricing Cards */}
           <div className="pricing-dual-grid">
             <div className="price-box price-box-monthly">
@@ -662,7 +865,7 @@ export default function App() {
             <div className="price-box price-box-yearly">
               <div className="price-box-header">
                 <span className="price-box-title">Yearly</span>
-                <span className="price-discount-tag">-{rates.yearDiscountPct}%</span>
+                <span className="price-discount-tag">-1 mo discount</span>
               </div>
               <div className="price-box-val">
                 <EditableAmount

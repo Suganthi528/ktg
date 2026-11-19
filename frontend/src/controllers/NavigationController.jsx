@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import App from './App.jsx';
-import CustomerView from './CustomerView.jsx';
-import HowItWorks from './HowItWorks.jsx';
-import Capacity from './Capacity.jsx';
+import CalculatorView from '../views/CalculatorView.jsx';
+import CustomerView from '../views/CustomerView.jsx';
+import CustomerPageView from '../views/CustomerPageView.jsx';
+import HowItWorksView from '../views/HowItWorksView.jsx';
+import CapacityView from '../views/CapacityView.jsx';
 
 const routeOf = () => {
   const h = window.location.hash;
@@ -12,11 +13,14 @@ const routeOf = () => {
     ? 'capacity'
     : h === '#/customer'
     ? 'customer'
+    : h === '#/customer-page'
+    ? 'customer-page'
     : 'calc';
 };
 
-export default function Shell() {
+export default function NavigationController() {
   const [route, setRoute] = useState(routeOf);
+
   useEffect(() => {
     const on = () => setRoute(routeOf());
     window.addEventListener('hashchange', on);
@@ -30,15 +34,18 @@ export default function Shell() {
         <a href="#/capacity" className={route === 'capacity' ? 'active' : ''}>Capacity</a>
         <a href="#/how" className={route === 'how' ? 'active' : ''}>How it's calculated</a>
         <a href="#/customer" className={route === 'customer' ? 'active' : ''}>Customer View</a>
+        <a href="#/customer-page" className={route === 'customer-page' ? 'active' : ''}>Customer</a>
       </nav>
       {route === 'how' ? (
-        <HowItWorks />
+        <HowItWorksView />
       ) : route === 'capacity' ? (
-        <Capacity />
+        <CapacityView />
       ) : route === 'customer' ? (
         <CustomerView />
+      ) : route === 'customer-page' ? (
+        <CustomerPageView />
       ) : (
-        <App />
+        <CalculatorView />
       )}
     </>
   );
