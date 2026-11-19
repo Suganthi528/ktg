@@ -1,6 +1,6 @@
 // All money in INR. Defaults are editable in the UI (saved in localStorage).
 export const DEFAULT_RATES = {
-  usdToInr: 85,
+  usdToInr: 93,
   // Linode plans (USD/month); cap = capacity points vs computed load
   plans: [
     { name: 'Nanode 1GB', usd: 5, cap: 40 },
@@ -37,9 +37,9 @@ export const DEFAULT_RATES = {
   perUser: 150,
   perBranch: 500,
   perClient: 1,
-  moduleFee: { backup: 500, tracking: 1500, mfi: 3000 },
+  moduleFee: { backup: 500, tracking: 1500, mfi: 3000, hr: 2000, mobileApp: 2500, jewelLoan: 2000 },
   setupFee: 10000,
-  yearDiscountPct: 10,
+  yearDiscountPct: 8.33, // 1 month free out of 12 (pay 11 months)
   gstPct: 18, // GST on software/hosting services (India)
 };
 
@@ -50,22 +50,46 @@ export function calculate(inp, r) {
   const users = Math.max(0, Number(inp.users) || 0);
   const branches = Math.max(0, Number(inp.branches) || 0);
   const clients = Math.max(0, Number(inp.clients) || 0);
-  const trackedUsers = Math.max(0, Number(inp.trackedUsers) || 0);
-  const { mode, backup, tracking, mfi } = inp;
+  const trackedUsers = Math.max(
+    0,
+    inp.trackedUsers !== undefined && inp.trackedUsers !== '' ? Number(inp.trackedUsers) : users
+  );
+  const { mode, backup, tracking, mfi, hr, mobileApp, jewelLoan, backupFreq = 'daily' } = inp;
   const tracked = tracking ? Math.min(trackedUsers, users) : 0;
   const ovr = inp.overrides || {};
 
-  const load = users + clients / 50 + branches * 2 + tracked * 3 + (mfi ? users * 0.5 : 0);
+  const load =
+    users +
+    clients / 50 +
+    branches * 2 +
+    tracked * 3 +
+    (mfi ? users * 0.5 : 0) +
+    (hr ? users * 0.3 : 0) +
+    (mobileApp ? users * 0.5 : 0) +
+    (jewelLoan ? users * 0.3 : 0);
   const plan = pick(r.plans, load);
-  const dbPlan = pick(r.dbPlans, clients / 10 + users * 2 + tracked * 20);
+  const dbPlan = pick(
+    r.dbPlans,
+    clients / 10 + users * 2 + tracked * 20 + (jewelLoan ? 20 : 0) + (mobileApp ? 50 : 0)
+  );
 
   const share = mode === 'shared' ? 1 / r.sharedTenants : 1;
   const autoLinode = Math.round(plan.usd * fx * share);
-  const autoLinodeBackup = backup ? Math.round(plan.usd * (r.linodeBackupPct / 100) * fx * share) : 0;
+
+  // Backup frequency multiplier: yearly gets 1 month discount (11/12)
+  let backupMult = 1;
+  if (backupFreq === 'weekly') backupMult = 0.85;
+  else if (backupFreq === 'monthly') backupMult = 0.7;
+  else if (backupFreq === 'yearly') backupMult = 11 / 12;
+
+  const autoLinodeBackup = backup
+    ? Math.round(plan.usd * (r.linodeBackupPct / 100) * fx * share * backupMult)
+    : 0;
   const autoDb = Math.round(dbPlan.usd * fx * share);
 
+  const storageMult = backupFreq === 'monthly' ? 1.5 : backupFreq === 'weekly' ? 2 : 3;
   const dataGB = (clients * r.mbPerClient) / 1024 + tracked * 0.3;
-  const storageGB = backup ? dataGB * 3 : dataGB; // 3 retained backup copies
+  const storageGB = backup ? dataGB * storageMult : dataGB; // retained backup copies
   const extra = Math.max(0, storageGB - 250);
   const autoStorage = Math.round((r.spacesUsdPer250GB + extra * r.spacesExtraUsdPerGB) * fx * share);
 
@@ -84,9 +108,20 @@ export function calculate(inp, r) {
   const autoMarkup = Math.round(infra * (r.markupPct / 100));
   const markup = ovr.markup !== undefined ? ovr.markup : autoMarkup;
 
+  const hrFee = hr ? (r.moduleFee?.hr ?? 2000) : 0;
+  const mobileAppFee = mobileApp ? (r.moduleFee?.mobileApp ?? 2500) : 0;
+  const jewelLoanFee = jewelLoan ? (r.moduleFee?.jewelLoan ?? 2000) : 0;
+
   const autoFees =
-    users * r.perUser + branches * r.perBranch + clients * r.perClient +
-    (backup ? r.moduleFee.backup : 0) + (tracking ? r.moduleFee.tracking : 0) + (mfi ? r.moduleFee.mfi : 0);
+    users * r.perUser +
+    branches * r.perBranch +
+    clients * r.perClient +
+    (backup ? Math.round((r.moduleFee?.backup ?? 500) * backupMult) : 0) +
+    (tracking ? (r.moduleFee?.tracking ?? 1500) : 0) +
+    (mfi ? (r.moduleFee?.mfi ?? 3000) : 0) +
+    hrFee +
+    mobileAppFee +
+    jewelLoanFee;
   const fees = ovr.fees !== undefined ? ovr.fees : autoFees;
 
   const autoMonthly = infra; // recurring = server/infra charge only
@@ -98,7 +133,8 @@ export function calculate(inp, r) {
   const autoYearGross = Math.round(monthly * 12);
   const yearGross = ovr.yearGross !== undefined ? ovr.yearGross : autoYearGross;
 
-  const autoYearly = Math.round(yearGross * (1 - r.yearDiscountPct / 100));
+  // Yearly with 1 month discount (pay 11 months for 12 months service)
+  const autoYearly = Math.round(monthly * 11);
   const yearly = ovr.yearly !== undefined ? ovr.yearly : autoYearly;
 
   const setupFee = ovr.setupFee !== undefined ? ovr.setupFee : r.setupFee;
@@ -135,11 +171,17 @@ export function calculate(inp, r) {
   const autoProfit = markup + fees;
   const profit = ovr.profit !== undefined ? ovr.profit : autoProfit;
 
+  const backupLabel = !backup
+    ? 'Linode backups (Disabled)'
+    : backupFreq === 'yearly'
+    ? 'Linode backups (Yearly - 1 mo discount)'
+    : `Linode backups (${backupFreq.charAt(0).toUpperCase() + backupFreq.slice(1)})`;
+
   return {
     plan, dbPlan, dataGB, storageGB, mapLoads, load,
     lines: [
       ['linode', 'Linode server - ' + plan.name, linode],
-      ['linodeBackup', 'Linode backups', linodeBackup],
+      ['linodeBackup', backupLabel, linodeBackup],
       ['db', 'DigitalOcean DB - ' + dbPlan.name, db],
       ['storage', 'Cloud storage (Spaces) ' + storageGB.toFixed(1) + ' GB', storage],
       ['map', 'Map charge (' + Math.round(mapLoads).toLocaleString() + ' loads)', map],
