@@ -64,6 +64,63 @@ function EditableAmount({ value, overrideKey, overrides, onSetOverride, onClearO
   );
 }
 
+function EditableText({ text, textKey, textOverrides, onSetTextOverride, onClearTextOverride, className = '' }) {
+  const [editing, setEditing] = useState(false);
+  const isOverridden = textOverrides && textOverrides[textKey] !== undefined;
+  const currentVal = isOverridden ? textOverrides[textKey] : text;
+  const [tempVal, setTempVal] = useState(currentVal);
+
+  const startEdit = (e) => {
+    e.stopPropagation();
+    setTempVal(currentVal);
+    setEditing(true);
+  };
+
+  const save = () => {
+    setEditing(false);
+    if (!tempVal || tempVal.trim() === '' || tempVal.trim() === text) {
+      onClearTextOverride(textKey);
+    } else {
+      onSetTextOverride(textKey, tempVal.trim());
+    }
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      save();
+    } else if (e.key === 'Escape') {
+      setEditing(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <span className="editable-text-wrap" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="text"
+          autoFocus
+          className="editable-text-input"
+          value={tempVal}
+          onChange={(e) => setTempVal(e.target.value)}
+          onBlur={save}
+          onKeyDown={onKeyDown}
+        />
+        <button type="button" className="btn-editable-save" onClick={save} title="Save text">✓</button>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`editable-text ${isOverridden ? 'is-overridden' : ''} ${className}`}
+      onClick={startEdit}
+      title="Click to edit text"
+    >
+      <span className="editable-text-val">{currentVal}</span>
+    </span>
+  );
+}
+
 const loadQuotes = () => {
   try {
     return JSON.parse(localStorage.getItem('sp_quotes')) || [];
@@ -106,6 +163,7 @@ const START = {
   trackedUsers: 5,
   mfi: true,
   overrides: {},
+  textOverrides: {},
 };
 
 const RATE_FIELDS = [
@@ -230,7 +288,29 @@ export default function App() {
     setInp((prev) => ({
       ...prev,
       overrides: {},
+      textOverrides: {},
     }));
+  };
+
+  const setTextOverride = (k, v) => {
+    setInp((prev) => ({
+      ...prev,
+      textOverrides: {
+        ...(prev.textOverrides || {}),
+        [k]: v,
+      },
+    }));
+  };
+
+  const clearTextOverride = (k) => {
+    setInp((prev) => {
+      const next = { ...(prev.textOverrides || {}) };
+      delete next[k];
+      return {
+        ...prev,
+        textOverrides: next,
+      };
+    });
   };
 
   const INFRA_KEYS = ['linode', 'linodeBackup', 'db', 'storage', 'map'];
@@ -541,18 +621,18 @@ export default function App() {
               <h2 className="quote-client-name">{inp.client ? `Quote for: ${inp.client}` : 'Quote'}</h2>
             </div>
             <div className="quote-top-right">
-              {Object.keys(inp.overrides || {}).length > 0 && (
+              {(Object.keys(inp.overrides || {}).length > 0 || Object.keys(inp.textOverrides || {}).length > 0) && (
                 <button
                   type="button"
                   className="btn-reset-overrides"
                   onClick={clearAllOverrides}
-                  title="Reset all edited amounts back to formula"
+                  title="Reset all edited amounts and text back to default"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                     <path d="M3 3v5h5" />
                   </svg>
-                  <span>Reset custom amounts</span>
+                  <span>Reset custom edits</span>
                 </button>
               )}
               <div className="quote-print-date">
@@ -658,7 +738,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr className="total-monthly-row">
-                  <td>Monthly price (server only, excl. GST)</td>
+                  <td>
+                    <EditableText
+                      text="Monthly price (server only, excl. GST)"
+                      textKey="monthly"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.monthly}
@@ -670,7 +758,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr>
-                  <td>Yearly without discount</td>
+                  <td>
+                    <EditableText
+                      text="Yearly without discount"
+                      textKey="yearGross"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.yearGross}
@@ -682,7 +778,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr>
-                  <td>One-time: Markup ({rates.markupPct}%)</td>
+                  <td>
+                    <EditableText
+                      text={`One-time: Markup (${rates.markupPct}%)`}
+                      textKey="markup"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.markup}
@@ -694,7 +798,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr>
-                  <td>One-time: User / branch / client / module fees</td>
+                  <td>
+                    <EditableText
+                      text="One-time: User / branch / client / module fees"
+                      textKey="fees"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.fees}
@@ -707,7 +819,13 @@ export default function App() {
                 </tr>
                 <tr className="setup-fee-row">
                   <td>
-                    <span>One-time setup</span>
+                    <EditableText
+                      text="One-time setup"
+                      textKey="setupFee"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />{' '}
                     <span className="badge-setup-tag">Setup</span>
                   </td>
                   <td>
@@ -721,7 +839,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr className="total-monthly-row">
-                  <td>Total one-time payment (excl. GST)</td>
+                  <td>
+                    <EditableText
+                      text="Total one-time payment (excl. GST)"
+                      textKey="oneTimeBase"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.oneTimeBase}
@@ -733,7 +859,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr>
-                  <td>GST ({rates.gstPct}%) on monthly</td>
+                  <td>
+                    <EditableText
+                      text={`GST (${rates.gstPct}%) on monthly`}
+                      textKey="gstMonthly"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.gst.monthly}
@@ -745,7 +879,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr>
-                  <td>GST ({rates.gstPct}%) on one-time</td>
+                  <td>
+                    <EditableText
+                      text={`GST (${rates.gstPct}%) on one-time`}
+                      textKey="gstOneTime"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.gst.oneTime}
@@ -757,7 +899,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr className="total-monthly-row final-payment-row">
-                  <td>Monthly payable (incl. GST)</td>
+                  <td>
+                    <EditableText
+                      text="Monthly payable (incl. GST)"
+                      textKey="monthlyTotal"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.monthlyTotal}
@@ -769,7 +919,15 @@ export default function App() {
                   </td>
                 </tr>
                 <tr className="total-monthly-row final-payment-row">
-                  <td>One-time payable (incl. GST)</td>
+                  <td>
+                    <EditableText
+                      text="One-time payable (incl. GST)"
+                      textKey="oneTimeTotal"
+                      textOverrides={inp.textOverrides}
+                      onSetTextOverride={setTextOverride}
+                      onClearTextOverride={clearTextOverride}
+                    />
+                  </td>
                   <td>
                     <EditableAmount
                       value={res.oneTimeTotal}
