@@ -129,7 +129,7 @@ export default function Capacity() {
   const calc = (o) => calculate({ ...o, mode: 'separate' }, rates);
   const res = calc(inp);
   const tracked = inp.tracking ? Math.min(inp.trackedUsers, inp.users) : 0;
-  const dbLoad = inp.clients / 10 + inp.users * 2 + tracked * 20;
+  const dbLoad = res.dbLoad;
 
   // Smallest count at which plan steps up
   const upgradeAt = (key, which) => {
@@ -156,6 +156,9 @@ export default function Capacity() {
     backup: inp.backup ? rates.moduleFee.backup : 0,
     tracking: inp.tracking ? rates.moduleFee.tracking : 0,
     mfi: inp.mfi ? rates.moduleFee.mfi : 0,
+    hr: inp.hr ? rates.moduleFee.hr ?? 2000 : 0,
+    mobileApp: inp.mobileApp ? rates.moduleFee.mobileApp ?? 2500 : 0,
+    jewelLoan: inp.jewelLoan ? rates.moduleFee.jewelLoan ?? 2000 : 0,
   };
 
   const fx = rates.usdToInr;
@@ -163,11 +166,11 @@ export default function Capacity() {
   const extraGB = Math.max(0, res.storageGB - 250);
 
   const formula = {
-    linode: `${d(res.plan.usd)} × ₹${fx}`,
-    linodeBackup: inp.backup ? `${d(res.plan.usd)} × ${rates.linodeBackupPct}% × ₹${fx}` : 'Backup off → 0',
-    db: `${d(res.dbPlan.usd)} × ₹${fx}`,
+    linode: `${d(res.planUsd)} × ₹${fx}`,
+    linodeBackup: inp.backup ? `${d(res.planUsd)} × ${rates.linodeBackupPct}% × ₹${fx}` : 'Backup off → 0',
+    db: `${d(res.dbUsd)} × ₹${fx}`,
     storage: `(${d(rates.spacesUsdPer250GB)} + ${extraGB.toFixed(1)} GB extra × ${d(rates.spacesExtraUsdPerGB)}) × ₹${fx}`,
-    map: `${fmt(res.mapLoads)} loads ÷ 1000 × ${d(rates.mapUsdPer1000)} × ₹${fx}`,
+    map: `${d(res.mapUsd)} (calls beyond Google free tier) × ₹${fx}`,
   };
 
   const rows = STEPS[driver].map((v) => {
@@ -399,6 +402,63 @@ export default function Capacity() {
                     <span className="slider"></span>
                   </span>
                 </label>
+
+                {/* HR Module */}
+                <label className={`module-toggle-card ${inp.hr ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><polyline points="17 11 19 13 23 9" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">HR</span>
+                      <span className="module-hint">Staff records, payroll & attendance</span>
+                    </div>
+                  </div>
+                  <span className="switch">
+                    <input type="checkbox" checked={!!inp.hr} onChange={set('hr')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
+
+                {/* Mobile app Module */}
+                <label className={`module-toggle-card ${inp.mobileApp ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" /><line x1="12" y1="18" x2="12.01" y2="18" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">Mobile app</span>
+                      <span className="module-hint">Field collections & customer app</span>
+                    </div>
+                  </div>
+                  <span className="switch">
+                    <input type="checkbox" checked={!!inp.mobileApp} onChange={set('mobileApp')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
+
+                {/* Jewel loan Module */}
+                <label className={`module-toggle-card ${inp.jewelLoan ? 'active' : ''}`}>
+                  <div className="module-info">
+                    <div className="module-icon-wrap">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 3h12l4 6-10 12L2 9z" /><path d="M2 9h20" />
+                      </svg>
+                    </div>
+                    <div>
+                      <span className="module-title">Jewel loan</span>
+                      <span className="module-hint">Gold appraisal & pledge custody</span>
+                    </div>
+                  </div>
+                  <span className="switch">
+                    <input type="checkbox" checked={!!inp.jewelLoan} onChange={set('jewelLoan')} />
+                    <span className="slider"></span>
+                  </span>
+                </label>
               </div>
             </div>
 
@@ -427,7 +487,7 @@ export default function Capacity() {
               </div>
               <div className="cap-kpi-val">{res.plan.name}</div>
               <div className="cap-kpi-sub">
-                <b>{d(res.plan.usd)}/mo</b> · {inr(res.plan.usd * fx)}/mo
+                <b>{d(res.planUsd)}/mo</b> · {inr(res.planUsd * fx)}/mo
               </div>
             </div>
 
@@ -441,7 +501,7 @@ export default function Capacity() {
               </div>
               <div className="cap-kpi-val">{res.dbPlan.name}</div>
               <div className="cap-kpi-sub">
-                <b>{d(res.dbPlan.usd)}/mo</b> · {inr(res.dbPlan.usd * fx)}/mo
+                <b>{d(res.dbUsd)}/mo</b> · {inr(res.dbUsd * fx)}/mo
               </div>
             </div>
 
@@ -505,7 +565,7 @@ export default function Capacity() {
                     <div>
                       <h3 className="cap-card-title">Server (Linode)</h3>
                       <p className="cap-card-sub">
-                        <b>{res.plan.name}</b> — {d(res.plan.usd)} × ₹{fx} = {inr(res.plan.usd * fx)}/month. Picked because it is the smallest plan with capacity ≥ load.
+                        <b>{res.plan.name}</b> (list {d(res.plan.usd)}) — priced at {d(res.planUsd)} × ₹{fx} = {inr(res.planUsd * fx)}/month for this load. Plan picked because it is the smallest with capacity ≥ load.
                       </p>
                     </div>
                   </div>
@@ -532,23 +592,16 @@ export default function Capacity() {
                 <div className="cap-formula-card">
                   <span className="cap-formula-title">Load Breakdown Formula:</span>
                   <div className="cap-formula-chips">
-                    <span className="cap-chip">{inp.users} users</span>
-                    <span className="cap-chip-op">+</span>
-                    <span className="cap-chip">({inp.clients} ÷ 50) clients</span>
-                    <span className="cap-chip-op">+</span>
-                    <span className="cap-chip">({inp.branches} × 2) branches</span>
-                    <span className="cap-chip-op">+</span>
-                    <span className="cap-chip">({tracked} × 3) tracked</span>
-                    {inp.mfi && (
-                      <>
-                        <span className="cap-chip-op">+</span>
-                        <span className="cap-chip">({inp.users} × 0.5) MFI</span>
-                      </>
-                    )}
+                    {Object.entries(res.moduleCalls).filter(([, v]) => v > 0).map(([k, v], i) => (
+                      <span key={k} style={{ display: 'contents' }}>
+                        {i > 0 && <span className="cap-chip-op">+</span>}
+                        <span className="cap-chip">{k}: {Math.round(v).toLocaleString('en-IN')}</span>
+                      </span>
+                    ))}
                     <span className="cap-chip-op">=</span>
-                    <span className="cap-chip-total">{res.load.toFixed(1)} points</span>
+                    <span className="cap-chip-total">{Math.round(res.dailyCalls).toLocaleString('en-IN')} calls/day</span>
                   </div>
-                  <code>{inp.users} users + {inp.clients} ÷ 50 + {inp.branches} × 2 + {tracked} × 3{inp.mfi ? ` + ${inp.users} × 0.5` : ''} = {res.load.toFixed(1)}</code>
+                  <code>peak = {Math.round(res.dailyCalls).toLocaleString('en-IN')} × {rates.peakShare} = {Math.round(res.peakPerMin).toLocaleString('en-IN')} calls/min ({(res.peakPerMin / 60).toFixed(0)}/sec) ÷ {rates.callsPerLoadPoint} = {res.load.toFixed(1)} points</code>
                 </div>
 
                 {/* Headroom / Over-limit banner */}
@@ -581,7 +634,7 @@ export default function Capacity() {
                     <div>
                       <h3 className="cap-card-title">Database (DigitalOcean)</h3>
                       <p className="cap-card-sub">
-                        <b>{res.dbPlan.name}</b> — {d(res.dbPlan.usd)} × ₹{fx} = {inr(res.dbPlan.usd * fx)}/month. Picked because it is the smallest DB plan with capacity ≥ load.
+                        <b>{res.dbPlan.name}</b> (list {d(res.dbPlan.usd)}) — priced at {d(res.dbUsd)} × ₹{fx} = {inr(res.dbUsd * fx)}/month for this load. Plan picked because it is the smallest DB plan with capacity ≥ load.
                       </p>
                     </div>
                   </div>
@@ -608,15 +661,13 @@ export default function Capacity() {
                 <div className="cap-formula-card">
                   <span className="cap-formula-title">DB Load Breakdown Formula:</span>
                   <div className="cap-formula-chips">
-                    <span className="cap-chip">({inp.clients} ÷ 10) clients</span>
+                    <span className="cap-chip">({inp.clients} ÷ 50) clients</span>
                     <span className="cap-chip-op">+</span>
-                    <span className="cap-chip">({inp.users} × 2) users</span>
-                    <span className="cap-chip-op">+</span>
-                    <span className="cap-chip">({tracked} × 20) tracked</span>
+                    <span className="cap-chip">({Math.round(res.dailyCalls).toLocaleString('en-IN')} ÷ {rates.dbCallsPerLoadPoint}) API calls/day</span>
                     <span className="cap-chip-op">=</span>
                     <span className="cap-chip-total">{dbLoad.toFixed(1)} points</span>
                   </div>
-                  <code>{inp.clients} ÷ 10 + {inp.users} × 2 + {tracked} × 20 = {dbLoad.toFixed(1)}</code>
+                  <code>{inp.clients} ÷ 50 + {Math.round(res.dailyCalls)} ÷ {rates.dbCallsPerLoadPoint} = {dbLoad.toFixed(1)}</code>
                 </div>
 
                 {/* Headroom banner */}
@@ -773,7 +824,7 @@ export default function Capacity() {
                     <tr>
                       <td><b>Map loads / month</b></td>
                       <td>
-                        {tracked} tracked × {rates.mapLoadsPerUserPerDay} per day × {rates.workDaysPerMonth} days
+                        {tracked} tracked × ({rates.mapJsPerUserPerDay} loads + {rates.mapRoadsPerUserPerDay} roads) per day × {rates.workDaysPerMonth} days, minus Google free tier
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <span className="cap-val-pill">{fmt(res.mapLoads)} loads</span>
@@ -891,6 +942,21 @@ export default function Capacity() {
                       <td>MFI module</td>
                       <td>{inp.mfi ? 'on' : 'off → 0'}</td>
                       <td style={{ textAlign: 'right' }}>{inr(fees.mfi)}</td>
+                    </tr>
+                    <tr>
+                      <td>HR module</td>
+                      <td>{inp.hr ? 'on' : 'off → 0'}</td>
+                      <td style={{ textAlign: 'right' }}>{inr(fees.hr)}</td>
+                    </tr>
+                    <tr>
+                      <td>Mobile app</td>
+                      <td>{inp.mobileApp ? 'on' : 'off → 0'}</td>
+                      <td style={{ textAlign: 'right' }}>{inr(fees.mobileApp)}</td>
+                    </tr>
+                    <tr>
+                      <td>Jewel loan module</td>
+                      <td>{inp.jewelLoan ? 'on' : 'off → 0'}</td>
+                      <td style={{ textAlign: 'right' }}>{inr(fees.jewelLoan)}</td>
                     </tr>
                     <tr>
                       <td>Setup fee</td>

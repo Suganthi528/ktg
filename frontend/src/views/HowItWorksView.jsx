@@ -36,8 +36,10 @@ export default function HowItWorks() {
   const money = (n) => '₹' + Number(n).toLocaleString('en-IN');
   const fx = r.usdToInr || 93;
 
-  const exampleLoads = 5 * r.mapLoadsPerUserPerDay * r.workDaysPerMonth;
-  const exampleUsd = (exampleLoads / 1000) * r.mapUsdPer1000;
+  const exampleLoads = 250 * (r.mapJsPerUserPerDay + r.mapRoadsPerUserPerDay) * r.workDaysPerMonth;
+  const exampleUsd =
+    (Math.max(0, 250 * r.mapJsPerUserPerDay * r.workDaysPerMonth - r.mapFree.js) / 1000) * r.mapUsdPer1000 +
+    (Math.max(0, 250 * r.mapRoadsPerUserPerDay * r.workDaysPerMonth - r.mapFree.roads) / 1000) * r.roadsUsdPer1000;
   const exampleInr = Math.round(exampleUsd * fx);
 
   return (
@@ -82,7 +84,7 @@ export default function HowItWorks() {
           <span className="how-rate-k">Setup Fee:</span>
           <b>{money(r.setupFee)}</b>
         </div>
-        <a href="#/" className="how-rate-link">
+        <a href="#/calculator" className="how-rate-link">
           Edit Rates in Calculator →
         </a>
       </section>
@@ -185,7 +187,7 @@ export default function HowItWorks() {
 
               <div className="how-formula-banner">
                 <span className="how-formula-label">Server Load Calculation:</span>
-                <code>load = users + clients ÷ 50 + branches × 2 + trackedUsers × 3 + (MFI on ? users × 0.5 : 0)</code>
+                <code>calls/day = users × (base {r.callsPerUserPerDay.base} + MFI {r.callsPerUserPerDay.mfi} + Mobile app {r.callsPerUserPerDay.mobileApp} + HR {r.callsPerUserPerDay.hr} + Jewel {r.callsPerUserPerDay.jewelLoan}) + trackedUsers × {r.callsPerUserPerDay.tracking}</code><code>load = calls/day × {r.peakShare} (peak/min) ÷ {r.callsPerLoadPoint}</code>
               </div>
 
               <p className="how-body-text">
@@ -220,7 +222,7 @@ export default function HowItWorks() {
 
               <div className="how-formula-banner">
                 <span className="how-formula-label">Database Load Calculation:</span>
-                <code>dbLoad = clients ÷ 10 + users × 2 + trackedUsers × 20</code>
+                <code>dbLoad = clients ÷ 50 + calls/day ÷ {r.dbCallsPerLoadPoint}</code>
               </div>
 
               <p className="how-body-text">
@@ -314,18 +316,18 @@ export default function HowItWorks() {
               <div className="how-sub-block">
                 <h4>How the calculator estimates it:</h4>
                 <div className="how-formula-banner">
-                  <code>loads = trackedUsers × {r.mapLoadsPerUserPerDay} per day × {r.workDaysPerMonth} days</code>
-                  <code>cost = loads ÷ 1000 × ${r.mapUsdPer1000}</code>
+                  <code>calls = trackedUsers × ({r.mapJsPerUserPerDay} map loads + {r.mapRoadsPerUserPerDay} roads) per day × {r.workDaysPerMonth} days</code>
+                  <code>cost = (calls − Google free tier) ÷ 1000 × price per API (maps ${r.mapUsdPer1000}, roads ${r.roadsUsdPer1000})</code>
                 </div>
 
                 <div className="how-example-card">
                   <span className="how-example-badge">Example</span>
                   <p>
-                    <b>5 tracked users</b> → 5 × {r.mapLoadsPerUserPerDay} loads/day × {r.workDaysPerMonth} work days = <b>{exampleLoads.toLocaleString()} loads</b>.
+                    <b>250 tracked users</b> (Sarvam) → 250 × {r.mapJsPerUserPerDay + r.mapRoadsPerUserPerDay} calls/day × {r.workDaysPerMonth} work days = <b>{Math.round(exampleLoads).toLocaleString()} calls</b>.
                     <br />
                     Cost: <b>${exampleUsd.toFixed(2)}</b> (about <b>{money(exampleInr)}</b>).
                     <br />
-                    <span className="how-note-text">This is a safe flat estimate and does not subtract Google's monthly free allowance.</span>
+                    <span className="how-note-text">Rates come from Sarvam's real usage report (14–20 Nov 2026). Google's monthly free allowance (Maps 10,000, Roads 5,000) is subtracted.</span>
                   </p>
                 </div>
               </div>

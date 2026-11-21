@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react';
+import { FileText, Calculator, Gauge, BookOpen, Users } from 'lucide-react';
 import CalculatorView from '../views/CalculatorView.jsx';
 import CustomerView from '../views/CustomerView.jsx';
 import CustomerPageView from '../views/CustomerPageView.jsx';
 import HowItWorksView from '../views/HowItWorksView.jsx';
 import CapacityView from '../views/CapacityView.jsx';
 
-const routeOf = () => {
-  const h = window.location.hash;
-  return h === '#/how'
-    ? 'how'
-    : h === '#/capacity'
-    ? 'capacity'
-    : h === '#/customer'
-    ? 'customer'
-    : h === '#/customer-page'
-    ? 'customer-page'
-    : 'calc';
+const ROUTES = {
+  '#/calculator': 'calc',
+  '#/capacity': 'capacity',
+  '#/how': 'how',
+  '#/customer': 'customer',
 };
+
+// Home page ("#/" or empty) = Customer quotation
+const routeOf = () => ROUTES[window.location.hash] || 'customer-page';
+
+const NAV = [
+  { route: 'customer-page', href: '#/', label: 'Quotation', Icon: FileText },
+  { route: 'calc', href: '#/calculator', label: 'Calculator', Icon: Calculator },
+  { route: 'capacity', href: '#/capacity', label: 'Capacity', Icon: Gauge },
+  { route: 'how', href: '#/how', label: "How it's calculated", Icon: BookOpen },
+  { route: 'customer', href: '#/customer', label: 'Customer View', Icon: Users },
+];
 
 export default function NavigationController() {
   const [route, setRoute] = useState(routeOf);
@@ -27,14 +33,36 @@ export default function NavigationController() {
     return () => window.removeEventListener('hashchange', on);
   }, []);
 
+  // Mobile: copy each table header text onto its cells so stacked rows keep their labels
+  useEffect(() => {
+    const label = () => {
+      document.querySelectorAll('table.how-table').forEach((t) => {
+        const heads = [...t.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+        if (!heads.length) return;
+        t.querySelectorAll('tbody tr').forEach((tr) => {
+          let i = 0;
+          [...tr.children].forEach((td) => {
+            if (heads[i] && td.getAttribute('data-label') !== heads[i]) td.setAttribute('data-label', heads[i]);
+            i += td.colSpan || 1;
+          });
+        });
+      });
+    };
+    label();
+    const mo = new MutationObserver(label);
+    mo.observe(document.getElementById('root'), { childList: true, subtree: true, characterData: true });
+    return () => mo.disconnect();
+  }, []);
+
   return (
     <>
-      <nav className="top-nav">
-        <a href="#/" className={route === 'calc' ? 'active' : ''}>Calculator</a>
-        <a href="#/capacity" className={route === 'capacity' ? 'active' : ''}>Capacity</a>
-        <a href="#/how" className={route === 'how' ? 'active' : ''}>How it's calculated</a>
-        <a href="#/customer" className={route === 'customer' ? 'active' : ''}>Customer View</a>
-        <a href="#/customer-page" className={route === 'customer-page' ? 'active' : ''}>Customer</a>
+      <nav className="top-nav" aria-label="Main">
+        {NAV.map(({ route: r, href, label, Icon }) => (
+          <a key={r} href={href} className={route === r ? 'active' : ''} aria-current={route === r ? 'page' : undefined}>
+            <Icon size={15} strokeWidth={2} />
+            <span>{label}</span>
+          </a>
+        ))}
       </nav>
       {route === 'how' ? (
         <HowItWorksView />
