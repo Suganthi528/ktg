@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_RATES, calculate } from '../models/pricing.model.js';
+import { buildQuote } from '../models/quote.model.js';
+import { downloadQuotePdf, PDF_MODES } from '../utils/quotePdf.js';
+import {
+  FileText, Building2, Phone, Users, GitBranch, UserRound, Layers, Check, CalendarDays, CalendarCheck,
+  Repeat, Receipt, Sparkles, Download, Save, Printer, Landmark, Navigation, UserCheck, Smartphone, Gem,
+  DatabaseBackup, FileDown,
+} from 'lucide-react';
 import {
   fetchQuotesApi,
   saveQuoteApi,
@@ -133,6 +140,11 @@ const ALL_MODULES = [
   },
 ];
 
+const MODULE_ICONS = {
+  mfi: Landmark, tracking: Navigation, hr: UserCheck, mobileApp: Smartphone, jewelLoan: Gem, backup: DatabaseBackup,
+};
+const fmtD = (d) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
 const BACKUP_FREQ_LABEL = {
   daily: 'Daily',
   weekly: 'Weekly retention',
@@ -156,6 +168,7 @@ export default function CustomerPageView() {
   const [search, setSearch] = useState('');
   const [activeQuoteId, setActiveQuoteId] = useState(null);
   const [billingCycle, setBillingCycle] = useState(getInitialBilling);
+  const [pdfMode, setPdfMode] = useState('full');
 
   // Load initial data
   useEffect(() => {
@@ -344,6 +357,15 @@ export default function CustomerPageView() {
       });
     return Object.entries(g);
   }, [quotes, search]);
+
+  const quote = useMemo(
+    () => buildQuote({
+      inp, res, rates, billingCycle,
+      quoteNo: activeQuote?.id ? 'Q-' + activeQuote.id : 'DRAFT',
+      date: quoteDate,
+    }),
+    [inp, res, rates, billingCycle, activeQuote, quoteDate]
+  );
 
   // Only modules enabled in the current quote
   const activeModules = ALL_MODULES.filter((m) => !!inp[m.key]);
@@ -745,180 +767,155 @@ export default function CustomerPageView() {
         {/* Right Column: Customer Quotation Card (Read-Only + Included Add-on Modules) */}
         <div className="calculator-col calculator-right-col">
           <section className="card result customer-quote-card">
-            {/* Top Bar with Client & Date */}
-            <div className="quote-top-bar">
-              <div className="quote-title-group">
-                <div className="quote-print-brand">Customer Quotation</div>
-                <h2 className="quote-client-name">
-                  {inp.client && inp.client.trim() ? `Quote for: ${inp.client.trim()}` : 'Quotation'}
-                </h2>
-              </div>
-              <div className="quote-top-right">
-                <div className="quote-print-date">
-                  Date: {quoteDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+            {/* ===== Professional quotation document ===== */}
+            <div className="qd-header">
+              <div className="qd-brand">
+                <span className="qd-brand-icon"><FileText size={20} strokeWidth={2} /></span>
+                <div>
+                  <div className="qd-brand-title">Quotation</div>
+                  <div className="qd-brand-sub">Hosting &amp; Software Services</div>
                 </div>
               </div>
-            </div>
-
-            {/* Company & Scope Metadata Card */}
-            <div className="quote-company-spec-card">
-              <div className="quote-spec-item">
-                <span className="quote-spec-k">Company Name</span>
-                <span className="quote-spec-v">{inp.client && inp.client.trim() ? inp.client.trim() : '—'}</span>
-              </div>
-              <div className="quote-spec-item">
-                <span className="quote-spec-k">Contact No</span>
-                <span className="quote-spec-v">{inp.contactNo && inp.contactNo.trim() ? inp.contactNo.trim() : '—'}</span>
-              </div>
-              <div className="quote-spec-item">
-                <span className="quote-spec-k">Branch</span>
-                <span className="quote-spec-v">{inp.branches || 0}</span>
-              </div>
-              <div className="quote-spec-item">
-                <span className="quote-spec-k">Staff</span>
-                <span className="quote-spec-v">{inp.users || 0}</span>
-              </div>
-              <div className="quote-spec-item">
-                <span className="quote-spec-k">Customer</span>
-                <span className="quote-spec-v">{inp.clients || 0}</span>
-              </div>
-            </div>
-
-            {/* Prominent Dual Pricing Cards (Click to switch Monthly / Yearly view) */}
-            <div className="pricing-dual-grid" style={{ marginTop: '14px' }}>
-              <div
-                className={`price-box price-box-monthly clickable ${billingCycle === 'monthly' ? 'selected-cycle' : ''}`}
-                onClick={() => setBillingCycle('monthly')}
-                style={{ cursor: 'pointer' }}
-                title="Click to show Monthly payable"
-              >
-                <div className="price-box-header">
-                  <span className="price-box-title">Monthly</span>
-                  {billingCycle === 'monthly' && <span className="cycle-selected-badge">✓ Active</span>}
-                </div>
-                <div className="price-box-val">{inr(res.monthlyTotal)}</div>
-                <small>incl. {rates.gstPct}% GST</small>
-              </div>
-
-              <div
-                className={`price-box price-box-yearly clickable ${billingCycle === 'yearly' ? 'selected-cycle' : ''}`}
-                onClick={() => setBillingCycle('yearly')}
-                style={{ cursor: 'pointer' }}
-                title="Click to show Yearly payable & 1 month discount"
-              >
-                <div className="price-box-header">
-                  <span className="price-box-title">Yearly</span>
-                  <span className="price-discount-tag">-1 mo discount</span>
-                  {billingCycle === 'yearly' && <span className="cycle-selected-badge">✓ Active</span>}
-                </div>
-                <div className="price-box-val">{inr(res.yearlyTotal)}</div>
-                <small>incl. {rates.gstPct}% GST</small>
-              </div>
-            </div>
-
-            {/* Clickable Toggle to switch Monthly or Yearly view */}
-            <div className="billing-cycle-toggle-bar">
-              <span className="toggle-label">Payable View:</span>
-              <div className="toggle-btn-group">
-                <button
-                  type="button"
-                  className={`cycle-toggle-btn ${billingCycle === 'monthly' ? 'active' : ''}`}
-                  onClick={() => setBillingCycle('monthly')}
-                >
-                  Monthly Payable
-                </button>
-                <button
-                  type="button"
-                  className={`cycle-toggle-btn ${billingCycle === 'yearly' ? 'active' : ''}`}
-                  onClick={() => setBillingCycle('yearly')}
-                >
-                  Yearly Payable
+              <div className="qd-meta">
+                <div><span>Quote No</span><b>{quote.quoteNo}</b></div>
+                <div><span>Date</span><b>{fmtD(quote.date)}</b></div>
+                <div><span>Valid till</span><b>{fmtD(quote.validTill)}</b></div>
+                <button type="button" className="qd-dl-btn" onClick={() => downloadQuotePdf(quote, pdfMode)} disabled={!quote.hasPlan}
+                  title={quote.hasPlan ? 'Download quotation as PDF' : 'Select at least one module first'}>
+                  <Download size={16} /> Download PDF
                 </button>
               </div>
             </div>
 
-            {/* Commercial Quotation Summary Table */}
-            <div className="breakdown-table-wrapper">
-              <table className="breakdown-table">
-                <tbody>
-                  {/* Add on module row placed directly above MFI module */}
-                  <tr>
-                    <td>Add on module</td>
-                    <td></td>
-                  </tr>
+            <div className="qd-client">
+              <div className="qd-client-main">
+                <span className="qd-label"><Building2 size={14} /> Prepared for</span>
+                <div className="qd-client-name">{quote.client || 'Client name'}</div>
+                <div className="qd-client-contact"><Phone size={13} /> {quote.contact || 'Contact not added'}</div>
+              </div>
+              <div className="qd-scope">
+                <div><Users size={15} /><b>{quote.scope.staff.toLocaleString('en-IN')}</b><span>Staff</span></div>
+                <div><GitBranch size={15} /><b>{quote.scope.branches.toLocaleString('en-IN')}</b><span>Branches</span></div>
+                <div><UserRound size={15} /><b>{quote.scope.customers.toLocaleString('en-IN')}</b><span>Customers</span></div>
+              </div>
+            </div>
 
-                  {/* MFI module row if active */}
-                  {inp.mfi && (
-                    <tr>
-                      <td>MFI module</td>
-                      <td></td>
-                    </tr>
+            {/* Included modules */}
+            <div className="qd-section">
+              <div className="qd-section-title"><Layers size={15} /> Included modules</div>
+              {quote.modules.length === 0 ? (
+                <div className="qd-empty">No module selected yet. Turn on the modules you need to see the price.</div>
+              ) : (
+                <ul className="qd-modules">
+                  {quote.modules.map((m) => {
+                    const Icon = MODULE_ICONS[m.key];
+                    return (
+                      <li key={m.key}>
+                        <span className="qd-mod-icon"><Icon size={16} /></span>
+                        <span className="qd-mod-text"><b>{m.label}</b><small>{m.hint}</small></span>
+                        <Check size={16} className="qd-mod-check" />
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            {quote.hasPlan && (
+              <>
+                {/* Billing cycle */}
+                <div className="qd-cycle" role="tablist" aria-label="Billing cycle">
+                  <button type="button" role="tab" aria-selected={billingCycle === 'monthly'}
+                    className={billingCycle === 'monthly' ? 'active' : ''} onClick={() => setBillingCycle('monthly')}>
+                    <CalendarDays size={15} /> Monthly
+                  </button>
+                  <button type="button" role="tab" aria-selected={billingCycle === 'yearly'}
+                    className={billingCycle === 'yearly' ? 'active' : ''} onClick={() => setBillingCycle('yearly')}>
+                    <CalendarCheck size={15} /> Yearly <em>1 month free</em>
+                  </button>
+                </div>
+
+                {/* A. Recurring */}
+                <div className="qd-section">
+                  <div className="qd-section-title"><Repeat size={15} /> A. Recurring charges</div>
+                  <table className="qd-table">
+                    <tbody>
+                      <tr><td>{quote.recurring.label}</td><td>{inr(quote.recurring.sub)}</td></tr>
+                      <tr><td>GST @ {quote.gstPct}%</td><td>{inr(quote.recurring.gst)}</td></tr>
+                      <tr className="qd-total"><td>{quote.yearly ? 'Yearly payable' : 'Monthly payable'} <small>(incl. GST)</small></td><td>{inr(quote.recurring.total)}</td></tr>
+                    </tbody>
+                  </table>
+                  {quote.yearly && (
+                    <div className="qd-note"><Sparkles size={14} /> You save {inr(quote.saving)} versus paying monthly - about {inr(quote.monthlyEquivalent)} per month.</div>
                   )}
+                </div>
 
-                  {/* Other active modules (excluding backup and mfi) */}
-                  {activeModules
-                    .filter((mod) => mod.key !== 'backup' && mod.key !== 'mfi')
-                    .map((mod) => {
-                      let extra = '';
-                      if (mod.key === 'tracking' && inp.trackedUsers) {
-                        extra = ` (${inp.trackedUsers} staff tracked)`;
-                      }
-                      return (
-                        <tr key={mod.key}>
-                          <td>{`${mod.label}${extra}`}</td>
-                          <td></td>
-                        </tr>
-                      );
-                    })}
+                {/* B. One-time */}
+                <div className="qd-section">
+                  <div className="qd-section-title"><Receipt size={15} /> B. One-time charges</div>
+                  <table className="qd-table">
+                    <tbody>
+                      {quote.oneTime.lines.map(([label, v]) => (
+                        <tr key={label}><td>{label}</td><td>{inr(v)}</td></tr>
+                      ))}
+                      <tr className="qd-sub"><td>Sub-total</td><td>{inr(quote.oneTime.sub)}</td></tr>
+                      <tr><td>GST @ {quote.gstPct}%</td><td>{inr(quote.oneTime.gst)}</td></tr>
+                      <tr className="qd-total"><td>One-time payable <small>(incl. GST)</small></td><td>{inr(quote.oneTime.total)}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
 
-                  {/* Monthly Payable: shown when Monthly is clicked */}
-                  {billingCycle === 'monthly' && (
-                    <tr className="total-monthly-row final-payment-row">
-                      <td>Monthly payable (incl. GST)</td>
-                      <td>{inr(res.monthlyTotal)}</td>
-                    </tr>
-                  )}
+                {/* Summary */}
+                <div className="qd-summary">
+                  <div>
+                    <span>First-year total (incl. GST)</span>
+                    <b>{inr(quote.firstYearTotal)}</b>
+                  </div>
+                  <small>
+                    {quote.yearly
+                      ? 'One-time charges + 12 months of hosting (1 month free)'
+                      : 'One-time charges + 12 monthly payments'}
+                  </small>
+                </div>
+              </>
+            )}
 
-                  {/* Yearly Payable & One month discount: shown when Yearly is clicked */}
-                  {billingCycle === 'yearly' && (
-                    <>
-                      <tr className="total-monthly-row final-payment-row">
-                        <td>Yearly payable (incl. GST)</td>
-                        <td>{inr(res.monthlyTotal * 12)}</td>
-                      </tr>
+            <p className="qd-terms">
+              Valid for 15 days. Amounts in INR. Recurring charges cover server, database, storage, backup and map
+              services for the selected modules.
+            </p>
 
-                      <tr className="total-monthly-row final-payment-row">
-                        <td>One month discount</td>
-                        <td>{inr(res.monthlyTotal)}</td>
-                      </tr>
-                    </>
-                  )}
-                </tbody>
-              </table>
+            {/* PDF options */}
+            <div className="qd-pdf-opts">
+              <span className="qd-pdf-label"><FileDown size={14} /> PDF contents</span>
+              <div className="qd-pdf-chips" role="radiogroup" aria-label="PDF contents">
+                {Object.entries(PDF_MODES).map(([k, m]) => (
+                  <button key={k} type="button" role="radio" aria-checked={pdfMode === k}
+                    className={pdfMode === k ? 'active' : ''} onClick={() => setPdfMode(k)}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              <small>
+                {pdfMode === 'monthly' && 'Monthly hosting charges only.'}
+                {pdfMode === 'yearly' && 'Yearly hosting charges only (1 month free).'}
+                {pdfMode === 'full' && 'Monthly + yearly options and one-time initial setup, with first-year totals.'}
+              </small>
             </div>
 
             {/* Action Buttons */}
-            <div className="action-buttons-bar">
-              <button type="button" className="btn-primary" onClick={saveQuote}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                  <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
+            <div className="action-buttons-bar qd-actions">
+              <button type="button" className="btn-primary" onClick={() => downloadQuotePdf(quote, pdfMode)} disabled={!quote.hasPlan}>
+                <Download size={16} />
+                <span>Download {PDF_MODES[pdfMode].label} PDF</span>
+              </button>
+              <button type="button" className="btn-secondary" onClick={saveQuote}>
+                <Save size={16} />
                 <span>Save quote</span>
               </button>
-
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => window.print()}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                  <rect x="6" y="14" width="12" height="8"></rect>
-                </svg>
-                <span>Print / Export PDF</span>
+              <button type="button" className="btn-secondary" onClick={() => window.print()}>
+                <Printer size={16} />
+                <span>Print</span>
               </button>
             </div>
           </section>

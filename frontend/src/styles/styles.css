@@ -1,4 +1,5 @@
 :root {
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --bg-app: #f8fafc;
   --bg-card: #ffffff;
@@ -6371,3 +6372,284 @@ html, body {
 
 
 
+
+/* ===== Mobile responsive pass ===== */
+@media (max-width: 640px) {
+  html, body { overflow-x: hidden; }
+
+  /* Top nav: wrap into a tidy grid instead of a clipped scroller */
+  .top-nav {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .top-nav a {
+    padding: 8px 6px;
+    font-size: 12.5px;
+    text-align: center;
+    white-space: normal;
+    border: 1px solid var(--border-light);
+  }
+
+  /* Pill bars wrap instead of overflowing */
+  .cap-view-pills,
+  .how-nav-pills {
+    display: flex;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+    width: 100%;
+    gap: 6px;
+  }
+  .cap-view-pill,
+  .how-nav-pill {
+    flex: 1 1 auto !important;
+    flex-shrink: 1 !important;
+    white-space: normal !important;
+  }
+
+  /* Tables become stacked cards; labels come from <th> via data-label */
+  .how-table-wrapper,
+  .cap-table-wrapper,
+  .cap-scroll { overflow-x: visible !important; border: 0; background: transparent; }
+  .how-table { min-width: 0 !important; width: 100%; display: block; }
+  .how-table thead { display: none; }
+  .how-table tbody { display: block; }
+  .how-table tr {
+    display: block;
+    margin-bottom: 10px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: #fff;
+    overflow: hidden;
+  }
+  .how-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 12px;
+    text-align: right;
+    word-break: break-word;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .how-table td:last-child { border-bottom: 0; }
+  .how-table td[data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 38%;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+  }
+  .how-table td[colspan] { display: block; text-align: left; }
+  .how-table td[colspan]::before { content: none; }
+  img, svg, video, canvas { max-width: 100%; }
+  code { white-space: pre-wrap; word-break: break-word; }
+}
+
+/* ===== Professional look: headings font, nav icons, quotation document ===== */
+h1, h2, h3, .qd-brand-title, .qd-client-name, .section-title { font-family: var(--font-display); letter-spacing: -0.01em; }
+body { -webkit-font-smoothing: antialiased; font-feature-settings: 'cv11', 'ss01'; }
+
+.top-nav a { display: inline-flex; align-items: center; gap: 7px; }
+.top-nav a svg { flex: 0 0 auto; opacity: 0.85; }
+.top-nav a.active svg { opacity: 1; }
+
+.customer-quote-card { padding: 0 !important; overflow: hidden; }
+.customer-quote-card > * { margin-left: 0; margin-right: 0; }
+
+.qd-header {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 18px 22px; color: #fff;
+  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+}
+.qd-brand { display: flex; align-items: center; gap: 12px; }
+.qd-brand-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,0.16); }
+.qd-brand-title { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+.qd-brand-sub { font-size: 12px; opacity: 0.85; }
+.qd-meta { display: flex; gap: 18px; flex-wrap: wrap; }
+.qd-meta div { display: flex; flex-direction: column; gap: 2px; }
+.qd-meta span { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; }
+.qd-meta b { font-size: 13px; font-weight: 700; }
+
+.qd-client {
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 18px 22px; border-bottom: 1px solid #e2e8f0; background: #f8fafc;
+}
+.qd-label { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; }
+.qd-client-name { font-size: 18px; font-weight: 700; color: #0f172a; margin: 4px 0 2px; word-break: break-word; }
+.qd-client-contact { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #64748b; }
+.qd-scope { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
+.qd-scope div {
+  display: grid; grid-template-columns: auto 1fr; column-gap: 8px; align-items: center;
+  min-width: 96px; padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; color: #0f766e;
+}
+.qd-scope div b { font-size: 16px; color: #0f172a; }
+.qd-scope div span { grid-column: 1 / -1; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.qd-section { padding: 16px 22px 4px; }
+.qd-section-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.qd-empty { padding: 14px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; font-size: 13px; background: #f8fafc; }
+
+.qd-modules { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.qd-modules li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }
+.qd-mod-icon { width: 32px; height: 32px; flex: 0 0 auto; border-radius: 8px; display: grid; place-items: center; background: #ccfbf1; color: #0f766e; }
+.qd-mod-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.qd-mod-text b { font-size: 13px; color: #0f172a; }
+.qd-mod-text small { font-size: 11.5px; color: #64748b; line-height: 1.35; }
+.qd-mod-check { color: #0d9488; flex: 0 0 auto; }
+
+.qd-cycle { display: flex; gap: 6px; margin: 16px 22px 0; padding: 4px; background: #f1f5f9; border-radius: 12px; }
+.qd-cycle button {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px 10px; border: 0; border-radius: 9px; background: transparent; cursor: pointer;
+  font: 600 13px var(--font-sans); color: #475569; transition: all .15s ease;
+}
+.qd-cycle button.active { background: #fff; color: #0f766e; box-shadow: 0 1px 4px rgba(15,23,42,.12); }
+.qd-cycle button em { font-style: normal; font-size: 10.5px; padding: 2px 7px; border-radius: 999px; background: #0d9488; color: #fff; }
+
+.qd-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.qd-table td { padding: 9px 4px; border-bottom: 1px solid #eef2f7; color: #334155; vertical-align: top; }
+.qd-table td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; color: #0f172a; }
+.qd-table .qd-sub td { font-weight: 700; border-top: 1px solid #cbd5e1; }
+.qd-table .qd-total td { background: #f0fdfa; color: #0f766e; font-weight: 800; font-size: 14.5px; border-bottom: 0; padding: 11px 10px; }
+.qd-table .qd-total td:first-child { border-radius: 8px 0 0 8px; }
+.qd-table .qd-total td:last-child { border-radius: 0 8px 8px 0; color: #0f766e; }
+.qd-table small { font-weight: 500; color: #64748b; }
+.qd-note { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 9px 12px; border-radius: 9px; background: #ecfdf5; color: #047857; font-size: 12.5px; }
+
+.qd-summary {
+  margin: 16px 22px 0; padding: 16px 18px; border-radius: 14px; color: #fff;
+  background: linear-gradient(135deg, #0f766e, #134e4a); display: flex; flex-direction: column; gap: 6px;
+}
+.qd-summary div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.qd-summary span { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.85; }
+.qd-summary b { font-family: var(--font-display); font-size: 24px; font-weight: 800; }
+.qd-summary small { opacity: 0.75; font-size: 12px; }
+
+.qd-terms { margin: 14px 22px 0; font-size: 11.5px; color: #64748b; line-height: 1.5; }
+.qd-actions { padding: 16px 22px 22px; display: flex; gap: 10px; flex-wrap: wrap; }
+.qd-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 160px; }
+.qd-actions .btn-primary { flex: 2 1 220px; }
+.qd-actions button:disabled { opacity: .5; cursor: not-allowed; }
+.qd-actions svg { width: 16px; height: 16px; }
+
+@media (max-width: 640px) {
+  .qd-header, .qd-client { padding: 16px; }
+  .qd-section { padding: 14px 16px 4px; }
+  .qd-modules { grid-template-columns: 1fr; }
+  .qd-cycle, .qd-summary, .qd-terms { margin-left: 16px; margin-right: 16px; }
+  .qd-actions { padding: 14px 16px 18px; }
+  .qd-summary b { font-size: 21px; }
+  .qd-table td { font-size: 13px; }
+  .qd-table td:last-child { white-space: normal; }
+}
+@media print {
+  .qd-actions, .qd-cycle { display: none !important; }
+}
+
+@media (max-width: 640px) { .top-nav a { justify-content: center; } }
+
+.qd-dl-btn { display:inline-flex; align-items:center; gap:7px; align-self:center; padding:9px 14px; border:0; border-radius:10px; background:#fff; color:#0f766e; font:700 13px var(--font-sans); cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.qd-dl-btn:hover:not(:disabled) { background:#f0fdfa; }
+.qd-dl-btn:disabled { opacity:.6; cursor:not-allowed; }
+@media print { .qd-dl-btn { display:none !important; } }
+@media (max-width:640px) { .qd-meta { width:100%; } .qd-dl-btn { width:100%; justify-content:center; } }
+
+/* ===== Fix: quotation card must scroll (fit-to-screen layout was clipping it) ===== */
+.qd-header { border-radius: 12px 12px 0 0; }
+.qd-pdf-opts { margin: 16px 22px 0; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; display: flex; flex-direction: column; gap: 8px; }
+.qd-pdf-label { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #64748b; }
+.qd-pdf-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.qd-pdf-chips button { flex: 1 1 90px; padding: 8px 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff; color: #475569; font: 600 12.5px var(--font-sans); cursor: pointer; }
+.qd-pdf-chips button.active { border-color: #0d9488; background: #ccfbf1; color: #0f766e; }
+.qd-pdf-opts small { color: #64748b; font-size: 11.5px; }
+@media (max-width: 640px) { .qd-pdf-opts { margin-left: 16px; margin-right: 16px; } }
+
+@media (min-width: 901px) {
+  .customer-view-page .calculator-right-col {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    padding-right: 4px;
+    scrollbar-width: thin;
+  }
+  .customer-view-page .calculator-right-col .card.result.customer-quote-card {
+    height: auto !important;
+    min-height: 0;
+    flex: 0 0 auto;
+    display: block !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+}
+
+/* ===== Mobile & tablet polish pass 2 ===== */
+
+/* Tablet and below: stacked table cards + wrapping pill bars (was phone-only) */
+@media (max-width: 900px) {
+  .cap-view-pills, .how-nav-pills { display: flex; flex-wrap: wrap !important; min-width: 0 !important; width: 100%; gap: 6px; }
+  .cap-view-pill, .how-nav-pill { flex: 1 1 auto !important; flex-shrink: 1 !important; white-space: normal !important; }
+  .how-table-wrapper, .cap-table-wrapper, .cap-scroll { overflow-x: visible !important; border: 0; background: transparent; }
+  .how-table { min-width: 0 !important; width: 100%; display: block; }
+  .how-table thead { display: none; }
+  .how-table tbody { display: block; }
+  .how-table tr { display: block; margin-bottom: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-md); background: #fff; overflow: hidden; }
+  .how-table td { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 12px; text-align: right; word-break: break-word; border-bottom: 1px solid var(--border-subtle); }
+  .how-table td:last-child { border-bottom: 0; }
+  .how-table td[data-label]::before { content: attr(data-label); flex: 0 0 38%; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); }
+  .how-table td[colspan] { display: block; text-align: left; }
+  .how-table td[colspan]::before { content: none; }
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  /* Nav: 3 + 2 layout instead of a lonely orphan button */
+  .top-nav { grid-template-columns: repeat(6, 1fr); }
+  .top-nav a { grid-column: span 2; flex-direction: column; gap: 3px; padding: 7px 4px; font-size: 11.5px; line-height: 1.2; }
+  .top-nav a:nth-child(n+4) { grid-column: span 3; flex-direction: row; gap: 6px; font-size: 12px; }
+
+  /* Quote scope tiles: always three equal columns */
+  .qd-scope { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; gap: 8px; }
+  .qd-scope div { min-width: 0; padding: 8px; grid-template-columns: auto 1fr; }
+  .qd-scope div b { font-size: 15px; }
+  .qd-scope div span { font-size: 10px; letter-spacing: .03em; }
+  .qd-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+  .qd-meta div { min-width: 0; }
+  .qd-meta b { font-size: 12px; }
+  .qd-dl-btn { grid-column: 1 / -1; }
+  .qd-brand-title { font-size: 17px; }
+  .qd-table td:first-child { word-break: break-word; }
+  .qd-pdf-chips button { flex: 1 1 30%; padding: 8px 4px; font-size: 12px; }
+  .qd-actions .btn-primary, .qd-actions button { flex: 1 1 100%; }
+
+  /* Calculator / Customer View quote tables */
+  .breakdown-table-wrapper { overflow-x: auto; max-width: 100%; }
+  .breakdown-table { width: 100%; table-layout: auto; }
+  .breakdown-table td { padding: 8px 6px; font-size: 12.5px; word-break: break-word; }
+  .breakdown-table td:last-child { white-space: normal; text-align: right; }
+  .editable-amount { max-width: 100%; }
+  .price-box-val { font-size: 20px; }
+  input, select, textarea { font-size: 16px; } /* stops iOS zoom-on-focus */
+  button { min-height: 40px; }
+}
+
+@media (max-width: 360px) {
+  .app-wrapper, .customer-view-page, .calculator-page { padding-left: 8px; padding-right: 8px; }
+  .qd-header, .qd-client { padding: 14px 12px; }
+  .qd-section { padding-left: 12px; padding-right: 12px; }
+  .qd-cycle, .qd-summary, .qd-terms, .qd-pdf-opts { margin-left: 12px; margin-right: 12px; }
+  .qd-actions { padding-left: 12px; padding-right: 12px; }
+  .qd-summary b { font-size: 19px; }
+  .breakdown-table td { font-size: 12px; padding: 7px 4px; }
+}
+
+@media (max-width: 640px) { .breakdown-table { min-width: 0 !important; } .breakdown-table td, .breakdown-table td:last-child { white-space: normal !important; } .breakdown-table td:last-child { min-width: 92px; } }
+
+@media (max-width: 640px) {
+  .calculator-page .breakdown-table, .customer-view-page .breakdown-table { min-width: 0 !important; }
+  .calculator-page .breakdown-table td, .customer-view-page .breakdown-table td,
+  .calculator-page .breakdown-table td:last-child, .customer-view-page .breakdown-table td:last-child { white-space: normal !important; }
+}
