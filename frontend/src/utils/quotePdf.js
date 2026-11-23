@@ -13,7 +13,7 @@ export const PDF_MODES = {
 };
 
 // mode: 'monthly' | 'yearly' | 'full'
-export function downloadQuotePdf(q, mode = 'full') {
+export function downloadQuotePdf(q, mode = 'full', logo = null) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -59,23 +59,35 @@ export function downloadQuotePdf(q, mode = 'full') {
     return nextY();
   };
 
-  // ---- Header band ----
-  doc.setFillColor(...teal);
-  doc.rect(0, 0, W, 64, 'F');
-  doc.setTextColor(255, 255, 255);
+  // ---- Header: company logo left, quotation details right ----
+  if (logo) {
+    try {
+      doc.addImage(logo, 'PNG', M, 16, 108, 43.6);
+    } catch {
+      /* logo is optional */
+    }
+  }
+  doc.setTextColor(...teal);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text('QUOTATION', M, 30);
+  doc.text('QUOTATION', W - M, 30, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
-  doc.text(PDF_MODES[mode].title, M, 46);
+  doc.setTextColor(...muted);
+  doc.text(PDF_MODES[mode].title, W - M, 43, { align: 'right' });
   doc.setFontSize(8);
-  doc.text(`Quote No: ${q.quoteNo}`, W - M, 24, { align: 'right' });
-  doc.text(`Date: ${fmtDate(q.date)}`, W - M, 37, { align: 'right' });
-  doc.text(`Valid till: ${fmtDate(q.validTill)}`, W - M, 50, { align: 'right' });
+  doc.setTextColor(...ink);
+  doc.text(
+    `Quote No: ${q.quoteNo}     Date: ${fmtDate(q.date)}     Valid till: ${fmtDate(q.validTill)}`,
+    W - M,
+    57,
+    { align: 'right' }
+  );
+  doc.setFillColor(...teal);
+  doc.rect(0, 72, W, 3, 'F');
 
   // ---- Prepared for / scope ----
-  let y = 86;
+  let y = 98;
   doc.setTextColor(...muted);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7);
@@ -212,7 +224,8 @@ export function downloadQuotePdf(q, mode = 'full') {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(...muted);
-    doc.text(`Quote ${q.quoteNo}  |  ${q.client || 'Client'}`, M, H - 22);
+    doc.text(`Knock The Globe Technologies  |  Give Us Your Hands`, M, H - 22);
+    doc.text(`Quote ${q.quoteNo}  |  ${q.client || 'Client'}`, W / 2 + 40, H - 22, { align: 'center' });
     doc.text(`Page ${i} of ${n}`, W - M, H - 22, { align: 'right' });
   }
 

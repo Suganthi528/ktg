@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
-import { FileText, Calculator, Gauge, BookOpen, Users } from 'lucide-react';
+import { FileText, Calculator, Gauge, BookOpen, Users, BarChart3 } from 'lucide-react';
+import logo from '../assets/ktg-logo.png';
 import CalculatorView from '../views/CalculatorView.jsx';
 import CustomerView from '../views/CustomerView.jsx';
 import CustomerPageView from '../views/CustomerPageView.jsx';
 import HowItWorksView from '../views/HowItWorksView.jsx';
 import CapacityView from '../views/CapacityView.jsx';
+import MarketAnalysisView from '../views/MarketAnalysisView.jsx';
 
 const ROUTES = {
   '#/calculator': 'calc',
   '#/capacity': 'capacity',
   '#/how': 'how',
   '#/customer': 'customer',
+  '#/market': 'market',
 };
 
 // Home page ("#/" or empty) = Customer quotation
@@ -22,6 +25,7 @@ const NAV = [
   { route: 'capacity', href: '#/capacity', label: 'Capacity', Icon: Gauge },
   { route: 'how', href: '#/how', label: "How it's calculated", Icon: BookOpen },
   { route: 'customer', href: '#/customer', label: 'Customer View', Icon: Users },
+  { route: 'market', href: '#/market', label: 'Market Analysis', Icon: BarChart3 },
 ];
 
 export default function NavigationController() {
@@ -57,6 +61,10 @@ export default function NavigationController() {
   return (
     <>
       <nav className="top-nav" aria-label="Main">
+        <a href="#/" className="nav-brand" aria-label="Knock The Globe Technologies">
+          <img src={logo} alt="Knock The Globe Technologies" />
+        </a>
+        <span className="nav-spacer" />
         {NAV.map(({ route: r, href, label, Icon }) => (
           <a key={r} href={href} className={route === r ? 'active' : ''} aria-current={route === r ? 'page' : undefined}>
             <Icon size={15} strokeWidth={2} />
@@ -64,7 +72,9 @@ export default function NavigationController() {
           </a>
         ))}
       </nav>
-      {route === 'how' ? (
+      {route === 'market' ? (
+        <MarketAnalysisView />
+      ) : route === 'how' ? (
         <HowItWorksView />
       ) : route === 'capacity' ? (
         <CapacityView />
