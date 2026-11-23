@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_RATES, calculate } from '../models/pricing.model.js';
 import { buildQuote } from '../models/quote.model.js';
-import { downloadQuotePdf, PDF_MODES } from '../utils/quotePdf.js';
+import { downloadQuotePdf as makePdf, PDF_MODES } from '../utils/quotePdf.js';
+import logo from '../assets/ktg-logo.png';
+import logoInline from '../assets/ktg-logo.png?inline';
+
+const downloadQuotePdf = (q, mode) => makePdf(q, mode, logoInline);
 import {
   FileText, Building2, Phone, Users, GitBranch, UserRound, Layers, Check, CalendarDays, CalendarCheck,
   Repeat, Receipt, Sparkles, Download, Save, Printer, Landmark, Navigation, UserCheck, Smartphone, Gem,
@@ -770,8 +774,8 @@ export default function CustomerPageView() {
             {/* ===== Professional quotation document ===== */}
             <div className="qd-header">
               <div className="qd-brand">
-                <span className="qd-brand-icon"><FileText size={20} strokeWidth={2} /></span>
-                <div>
+                <img className="qd-logo" src={logo} alt="Knock The Globe Technologies" />
+                <div className="qd-brand-text">
                   <div className="qd-brand-title">Quotation</div>
                   <div className="qd-brand-sub">Hosting &amp; Software Services</div>
                 </div>
