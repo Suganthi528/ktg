@@ -13,15 +13,12 @@ export const DEFAULT_RATES = {
     { name: 'Linode 96GB', usd: 576, cap: 16000 },
     { name: 'Linode 128GB', usd: 768, cap: 32000 },
   ],
-  // API traffic model, calibrated from Sarvam's real API report (Nov 2026):
-  // 250 users, avg working day = 2,15,314 calls (14 full working days), peak = 4,821 calls/min.
-  // Per-module split comes from "Top APIs today" (169,251 calls):
-  //   menu-badges/base web shell 34.6% | MFI endpoints 37.0% | live tracking ping 16.6%
-  //   mobile-only app calls 10.3% | HR attendance 1.4% | jewel loan 0.08% (no real record -> tiny assumption)
-  // MFI, HR and Jewel loan are assumed to generate the same traffic per user: the measured MFI+HR pool
-  // (318+12 = 330 per user) is split equally (165 each), so Sarvam's real set still totals ~2,15,000 calls/day.
-  callsVersion: 3,
-  callsPerUserPerDay: { base: 298, mfi: 165, mobileApp: 89, hr: 165, jewelLoan: 165, tracking: 143 },
+  // API traffic model, fitted to Sarvam's real monthly bills (250 users, 50 branches, 50,000 customers,
+  // no free map quota): MFI 18,703 | HR 13,312 | Jewel 13,106 | Live 26,384 | MFI+HR 18,905 | MFI+Live 31,809 |
+  // +HR 32,011 | +Mobile 33,510 | +Jewel 33,521. Fit is within ~Rs 700 of every figure.
+  // MFI is the heavy module; HR, Jewel and Mobile are light; live tracking's cost is almost all Google Maps.
+  callsVersion: 4,
+  callsPerUserPerDay: { base: 532, mfi: 431, mobileApp: 48, hr: 39, jewelLoan: 28, tracking: 0 },
   peakShare: 0.0224, // busiest minute = 2.24% of that day's calls (4,821 / 2,15,314)
   callsPerLoadPoint: 4, // 1 plan "load point" = 4 peak calls/min (16GB cap 1600 = 6,400 calls/min)
   dbCallsPerLoadPoint: 100, // DB load = clients/50 + dailyCalls/100
@@ -54,8 +51,8 @@ export const DEFAULT_RATES = {
   roadsUsdPer1000: 10, // Roads - snap to roads
   searchUsdPer1000: 2.83, // Places Autocomplete (per session)
   detailsUsdPer1000: 17, // Places Details
-  // Free monthly allowance per API (matches Google's report)
-  mapFree: { js: 10000, roads: 5000, search: 10000, details: 10000 },
+  // No free monthly allowance: every map call is billed (set to 0 on purpose)
+  mapFree: { js: 0, roads: 0, search: 0, details: 0 },
   // Selling side
   markupPct: 40,
   perUser: 150,
@@ -82,7 +79,7 @@ function priceUsd(list, plan, load, mode) {
 
 export function calculate(inp, rIn) {
   // Fill any missing keys (old saved rates / old quotes) with current defaults
-  const r = { ...DEFAULT_RATES, ...rIn, callsPerUserPerDay: (rIn && rIn.callsVersion === DEFAULT_RATES.callsVersion && rIn.callsPerUserPerDay) || DEFAULT_RATES.callsPerUserPerDay, callsVersion: DEFAULT_RATES.callsVersion, mapFree: { ...DEFAULT_RATES.mapFree, ...(rIn && rIn.mapFree) } };
+  const r = { ...DEFAULT_RATES, ...rIn, callsPerUserPerDay: (rIn && rIn.callsVersion === DEFAULT_RATES.callsVersion && rIn.callsPerUserPerDay) || DEFAULT_RATES.callsPerUserPerDay, callsVersion: DEFAULT_RATES.callsVersion, mapFree: DEFAULT_RATES.mapFree }; // always 0: ignores any old saved free allowance
   const fx = r.usdToInr;
   const users = Math.max(0, Number(inp.users) || 0);
   const branches = Math.max(0, Number(inp.branches) || 0);
@@ -100,7 +97,7 @@ export function calculate(inp, rIn) {
   // ---- API traffic -> server load (see callsPerUserPerDay in DEFAULT_RATES) ----
   const cpu = r.callsPerUserPerDay;
   const moduleCalls = {
-    base: users * cpu.base,
+    base: active ? users * cpu.base : 0, // no module selected => no traffic, no load
     mfi: mfi ? users * cpu.mfi : 0,
     mobileApp: mobileApp ? users * cpu.mobileApp : 0,
     hr: hr ? users * cpu.hr : 0,
@@ -245,7 +242,7 @@ export function calculate(inp, rIn) {
       ['linodeBackup', backupLabel, linodeBackup],
       ['db', 'DigitalOcean DB - ' + dbPlan.name, db],
       ['storage', 'Cloud storage (Spaces) ' + storageGB.toFixed(1) + ' GB', storage],
-      ['map', 'Google Maps (' + Math.round(mapLoads).toLocaleString() + ' calls/mo, beyond free tier)', map],
+      ['map', 'Google Maps (' + Math.round(mapLoads).toLocaleString() + ' calls/mo, no free tier)', map],
     ],
     feeLines, infra, markup, fees, oneTime, oneTimeBase, gst, monthlyTotal, yearlyTotal, oneTimeTotal, monthly, yearGross, yearly,
     setupFee,
