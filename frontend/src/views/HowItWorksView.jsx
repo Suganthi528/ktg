@@ -38,8 +38,8 @@ export default function HowItWorks() {
 
   const exampleLoads = 250 * (r.mapJsPerUserPerDay + r.mapRoadsPerUserPerDay) * r.workDaysPerMonth;
   const exampleUsd =
-    (Math.max(0, 250 * r.mapJsPerUserPerDay * r.workDaysPerMonth - r.mapFree.js) / 1000) * r.mapUsdPer1000 +
-    (Math.max(0, 250 * r.mapRoadsPerUserPerDay * r.workDaysPerMonth - r.mapFree.roads) / 1000) * r.roadsUsdPer1000;
+    (Math.max(0, 250 * r.mapJsPerUserPerDay * r.workDaysPerMonth) / 1000) * r.mapUsdPer1000 +
+    (Math.max(0, 250 * r.mapRoadsPerUserPerDay * r.workDaysPerMonth) / 1000) * r.roadsUsdPer1000;
   const exampleInr = Math.round(exampleUsd * fx);
 
   return (
@@ -317,7 +317,7 @@ export default function HowItWorks() {
                 <h4>How the calculator estimates it:</h4>
                 <div className="how-formula-banner">
                   <code>calls = trackedUsers × ({r.mapJsPerUserPerDay} map loads + {r.mapRoadsPerUserPerDay} roads) per day × {r.workDaysPerMonth} days</code>
-                  <code>cost = (calls − Google free tier) ÷ 1000 × price per API (maps ${r.mapUsdPer1000}, roads ${r.roadsUsdPer1000})</code>
+                  <code>cost = (all calls, no free tier) ÷ 1000 × price per API (maps ${r.mapUsdPer1000}, roads ${r.roadsUsdPer1000})</code>
                 </div>
 
                 <div className="how-example-card">
