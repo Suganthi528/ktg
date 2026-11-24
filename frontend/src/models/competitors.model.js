@@ -184,6 +184,24 @@ const RAW = [
       'No figures, GST basis, setup or AMC on the page. GPS tracking and hosting are not mentioned. Free demo.',
     ],
   },
+  {
+    name: 'HRBluSky', url: 'https://hrblusky.com/pricing-plan-india/', model: 'SUB',
+    headline: 'Base Rs 1,000 / month + Rs 10 / employee / month (GPS live tracking & geofencing)', entry: 13200, top: null,
+    notes: [
+      'Workforce & HR management platform with dedicated real-time GPS live tracking, route history, geofenced attendance, and client visit planning.',
+      'Pricing in India: Base Rs 1,000/month + Rs 10/employee/month. Optional biometric interface Rs 2/user/month.',
+      'Specialized for field staff tracking and attendance; not an MFI platform (no loan origination, EMI calculations, or group loan management).',
+    ],
+  },
+  {
+    name: 'lendstack', url: 'https://www.lendstack.in/pricing', model: 'SUB',
+    headline: 'Professional Rs 299 / Power Rs 599 / Premium Rs 999 per month', entry: 3588, top: 11988,
+    notes: [
+      'Microfinance loan management and daily vasool/thandal collection application.',
+      'Professional Rs 299/month (up to 200 loans, 3 users); Power Rs 599/month (up to 1,000 loans, 10 users); Premium Rs 999/month (unlimited loans & users).',
+      '"Live tracking" refers to real-time repayment dashboards and instant collection updates in the field app, not continuous GPS map/route tracking.',
+    ],
+  },
 ];
 
 export const MODEL_INFO = {
@@ -230,6 +248,8 @@ const CMP = {
   'ERP software India': { billing: 'Tiers (period not stated)', pricedBy: yes('Plan (3 versions)'), limits: yes('Unlimited users / login'), mobile: yes('Mobile app listed (plan unclear)'), hosting: yes('Cloud, 99.99% uptime'), setup: yes('Custom module free'), amc: na(), demo: yes('Request demo'), tax: na() },
   'Habile technologies': { billing: 'Guide: subscription, per-account or licence + AMC', pricedBy: yes('Users, active loan accounts or feature tier'), limits: na('Depends on loan book'), mobile: na(), hosting: yes('SaaS includes hosting'), setup: paid('Implementation Rs 1 - 10 lakh one-time'), amc: paid('15 - 20% of licence value'), demo: na(), tax: na() },
   'Fly fusion software': { billing: 'Not on directory page', pricedBy: na(), limits: na(), mobile: na(), hosting: na(), setup: na(), amc: na(), demo: na(), tax: na() },
+  'HRBluSky': { billing: 'Monthly subscription (base + per employee)', pricedBy: yes('Base fee + employee count'), limits: yes('Scales per employee'), mobile: yes('Employee mobile app with GPS tracking'), hosting: yes('Cloud platform included'), setup: yes('30-day free trial; self-serve'), amc: na('Included in subscription'), demo: yes('Free 30-day trial & demo'), tax: na() },
+  'lendstack': { billing: 'Monthly subscription tiers', pricedBy: yes('Active loan volume + users'), limits: yes('200 / 1,000 / unlimited loans; 3 / 10 / unlimited users'), mobile: yes('Android mobile app for field vasool/collections'), hosting: yes('Cloud sync included'), setup: yes('Free to start on app store'), amc: na('Included in subscription'), demo: yes('Free start on mobile app'), tax: na() },
 };
 
 
@@ -336,6 +356,20 @@ const SCALE = {
   'Fly fusion software': {
     users: na(), branches: na(), clients: na(), modules: na(),
     sarvam: { t: 'Not on the directory page read', conf: 'quote' },
+  },
+  'HRBluSky': {
+    users: yes('Rs 10 / employee / month on top of Rs 1,000 / month base'),
+    branches: na(),
+    clients: na('Not applicable (HR/employee platform)'),
+    modules: yes('Biometric integration add-on Rs 2/employee/mo'),
+    sarvam: { t: 'Rs 1,000 base + 230 staff x Rs 10 = Rs 3,300/mo = Rs 39,600/yr (HR & GPS tracking only)', est: 39600, conf: 'limits' },
+  },
+  'lendstack': {
+    users: yes('3 users (Professional), 10 users (Power), unlimited (Premium)'),
+    branches: na(),
+    clients: yes('200 active loans (Professional), 1,000 (Power), unlimited (Premium)'),
+    modules: na('Core daily collection & loan ledger included in tiers'),
+    sarvam: { t: 'Premium plan (unlimited loans and users): Rs 999/month = Rs 11,988/yr', est: 11988, conf: 'limits' },
   },
 };
 
@@ -459,6 +493,18 @@ const MODS = {
     jewel: paid('Gold loan is a product type that "adds configuration cost" - no figure'),
   },
   'Fly fusion software': { hosting: na('Not on the page read'), mfi: na('Not on the page read'), tracking: na('Not on the page read'), jewel: na('Not on the page read') },
+  'HRBluSky': {
+    hosting: yes('Cloud HR platform, hosting included'),
+    mfi: no('Not an MFI product - pure HRMS & workforce tracking'),
+    tracking: yes('Dedicated real-time GPS live tracking, live location, route history & geofencing (Base Rs 1,000/mo + Rs 10/user/mo)'),
+    jewel: no('Not supported'),
+  },
+  'lendstack': {
+    hosting: yes('Cloud sync included with mobile app'),
+    mfi: yes('Microfinance daily/weekly collection, EMI ledger, loan tracking'),
+    tracking: na('Real-time collection recording & ledger sync in "Vasool" app; continuous GPS live tracking not offered'),
+    jewel: na('Not mentioned'),
+  },
 };
 
 // HR / payroll: only three pages mention anything close to it; everyone else does not say.
@@ -467,6 +513,7 @@ const HR_FOUND = {
   'Aspire software and services': yes('Payroll listed on the listing (seller Vexil Infotech); price on request'),
   'ERP software India': yes('Employee and expense modules listed; which plan includes them could not be read'),
   'Websoftex': yes('Second listing (Rs 60,000) has an HR module'),
+  'HRBluSky': yes('Core product: attendance, leave, GPS geofencing, employee tracking'),
 };
 Object.keys(MODS).forEach((k) => { MODS[k].hr = HR_FOUND[k] || na('HR / payroll not mentioned'); });
 
