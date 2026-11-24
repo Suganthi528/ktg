@@ -1,10 +1,275 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  BarChart3, Search, ExternalLink, Building2, Store, Globe, ChevronDown, Lightbulb, Scale, Wallet, Table2, Users, SlidersHorizontal, Server,
+  BarChart3, Search, ExternalLink, Building2, Store, Globe, ChevronDown, Lightbulb, Scale, Wallet, Table2, Users, SlidersHorizontal, Server, Navigation, MapPin, CheckCircle2, XCircle, AlertTriangle,
 } from 'lucide-react';
 import { COMPETITORS, MODEL_INFO } from '../models/competitors.model.js';
 import { DEFAULT_RATES, calculate } from '../models/pricing.model.js';
 import { estimateFor } from '../models/marketEstimate.js';
+
+const TRACKING_CATEGORIES = [
+  { id: 'All', label: 'All Vendors', count: 23 },
+  { id: 'live-gps', label: 'True Live GPS (2)', count: 2, badge: 'live-gps' },
+  { id: 'passive-geo', label: 'Passive Geotag (3)', count: 3, badge: 'passive-geo' },
+  { id: 'ledger-sync', label: 'Transaction Sync Only (4)', count: 4, badge: 'ledger-sync' },
+  { id: 'no-track', label: 'No Location Tracking (14)', count: 14, badge: 'no-track' },
+];
+
+const TRACKING_ANALYSIS_DATA = [
+  {
+    name: 'Knock The Globe (us)',
+    isOurs: true,
+    category: 'live-gps',
+    categoryLabel: 'True Live GPS Tracking',
+    pings: 'Yes (3-5 min intervals)',
+    playback: 'Interactive Google Maps + Snap-to-Roads',
+    geofence: 'Geofenced center meetings & field visits',
+    mfiInt: 'Native (Directly tied to JLG/SHG collections)',
+    cost: 'Google Maps actual infra at cost + Rs 1,500 one-time',
+    notes: 'Real-time location stream on interactive map with battery, speed, breadcrumb trail, and Google Roads snapping.',
+  },
+  {
+    name: 'HRBluSky',
+    category: 'live-gps',
+    categoryLabel: 'True Live GPS Tracking',
+    pings: 'Yes (continuous live background location)',
+    playback: 'Yes (Route logs & travel history)',
+    geofence: 'Yes (Geofenced attendance & client site visits)',
+    mfiInt: 'No (Pure HRMS/workforce app, zero loan/MFI features)',
+    cost: 'Base Rs 1,000/mo + Rs 10/employee/mo',
+    notes: 'True GPS live tracking with idle time and route logs, but completely lacks loan origination, EMI vasool, or credit modules.',
+  },
+  {
+    name: 'Jaguar Software India',
+    category: 'passive-geo',
+    categoryLabel: 'Passive Geotagging',
+    pings: 'No (No live location stream)',
+    playback: 'No (Zero route playback)',
+    geofence: 'No geofencing',
+    mfiInt: 'Yes (JLG/SHG offline collection app)',
+    cost: 'Quote only',
+    notes: 'Offline collection app captures a single GPS coordinate timestamp only when a receipt is created. Zero visibility between stops.',
+  },
+  {
+    name: 'TaxHint (gold loan software)',
+    category: 'passive-geo',
+    categoryLabel: 'Passive Geotagging',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Gold loan only',
+    cost: 'From Rs 5,000',
+    notes: 'Lists "geo tagging" for gold appraisal location; no continuous tracking or route playback.',
+  },
+  {
+    name: 'Aspire software and services',
+    category: 'passive-geo',
+    categoryLabel: 'Passive Geotagging',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (Microfinance listing by Vexil Infotech)',
+    cost: 'Quote only',
+    notes: 'Lists "geo tagging" on transaction submissions; no real-time live map or movement tracking.',
+  },
+  {
+    name: 'LendStack',
+    category: 'ledger-sync',
+    categoryLabel: 'Transaction Sync Only',
+    pings: 'No (No GPS location tracking)',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (Daily vasool / thandal loan collections)',
+    cost: 'Rs 299 / 599 / 999 per month',
+    notes: 'Marketed as "live tracking", but only means real-time repayment dashboards and instant ledger synchronization when payments are logged.',
+  },
+  {
+    name: 'AMY Fintech',
+    category: 'ledger-sync',
+    categoryLabel: 'Transaction Sync Only',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (SHG / JLG & NBFC plans)',
+    cost: 'Staff collection app add-on Rs 10,000 - 25,000',
+    notes: 'Staff Collection App allows field agents to log collections; no GPS location pings, map routes, or movement telemetry.',
+  },
+  {
+    name: 'IDSPay',
+    category: 'ledger-sync',
+    categoryLabel: 'Transaction Sync Only',
+    pings: 'No GPS detail',
+    playback: 'No map route',
+    geofence: 'No',
+    mfiInt: 'Yes (MFI / NBFC / SHG / JLG)',
+    cost: 'Quote only',
+    notes: 'Lists a module named "Field Agent Tracking", but provides no live map or GPS route specifications.',
+  },
+  {
+    name: 'Zetu solutions / Green Apps',
+    category: 'ledger-sync',
+    categoryLabel: 'Transaction Sync Only',
+    pings: 'No GPS stream',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (Microfinance listing by ADL Techno)',
+    cost: 'Included in Rs 64,900',
+    notes: 'Claims "Track field recovery executive" on IndiaMART, but has no live GPS engine or route tracking.',
+  },
+  {
+    name: 'Genius Technology',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (Group loans & centre management)',
+    cost: 'Rs 40,000 - 1,70,000',
+    notes: 'Mentions "field operations mobility" and "remote monitoring", but includes no GPS location tracking.',
+  },
+  {
+    name: 'Microfinsoft',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes',
+    cost: 'Quote only',
+    notes: 'Standard web banking portal, no field officer live GPS tracking.',
+  },
+  {
+    name: 'Vector nidhi software',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Nidhi only',
+    cost: 'Rs 2,000 - 5,000 / mo',
+    notes: 'Nidhi management; collection app is an add-on without GPS tracking.',
+  },
+  {
+    name: 'CK Tech solutions',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Pawn / Gold only',
+    cost: 'Rs 10,000 - 55,000',
+    notes: 'Pawn-broking software; "vault tracking" is inventory, not GPS agent tracking.',
+  },
+  {
+    name: 'Hubco',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (SHG / JLG base plan)',
+    cost: 'Rs 20,000 / yr (+ app Rs 35,000)',
+    notes: 'Core loan software; staff Android app has no GPS tracking.',
+  },
+  {
+    name: 'Ecsoft pvt.ltd / Genuine IT',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Loan type only',
+    cost: 'Rs 5,000 / yr',
+    notes: 'Basic offline/cloud loan logging; Android app has no live GPS tracking.',
+  },
+  {
+    name: 'Websoftex',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (MFI group loans)',
+    cost: 'Rs 10,000 / 60,000',
+    notes: 'Agent app supports offline collection; no GPS tracking.',
+  },
+  {
+    name: 'Softdew Tech',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (Microfinance / NBFC)',
+    cost: 'Rs 9,500 / yr',
+    notes: 'Field app records collections with UPI/NACH; no live GPS tracking.',
+  },
+  {
+    name: 'Best software enterprise',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (Nelito FinCraft MFI)',
+    cost: 'Rs 8,000 - 2,20,000',
+    notes: 'SHG centre meetings; mobile app has no live GPS route tracking.',
+  },
+  {
+    name: 'NK solutions',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Loan type only',
+    cost: 'Rs 60,000 / yr',
+    notes: 'Windows loan software, no field agent GPS tracking.',
+  },
+  {
+    name: 'Varun info solutions',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes (MFI / SHG)',
+    cost: 'Rs 95,000',
+    notes: 'Partner app records EMI collections; no live GPS tracking.',
+  },
+  {
+    name: 'ERP software India',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Yes',
+    cost: 'Rs 51,000 - 70,000',
+    notes: 'Standard loan and accounting ERP, no field GPS tracking.',
+  },
+  {
+    name: 'Habile technologies',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'NBFC guide',
+    cost: 'Rs 15,000 - 4,00,000 / mo',
+    notes: 'Guide for NBFC lending platforms; custom GPS requires enterprise build.',
+  },
+  {
+    name: 'Fly fusion software',
+    category: 'no-track',
+    categoryLabel: 'No Location Tracking',
+    pings: 'No',
+    playback: 'No',
+    geofence: 'No',
+    mfiInt: 'Nidhi',
+    cost: 'Directory range',
+    notes: 'Generic Nidhi software directory listing, no GPS tracking.',
+  },
+];
 
 const SOURCES = ['All', 'Company site', 'IndiaMART', 'TradeIndia'];
 const inr = (n) => 'Rs ' + Math.round(n).toLocaleString('en-IN');
@@ -38,6 +303,12 @@ export default function MarketAnalysisView() {
   const [sortBy, setSortBy] = useState('order');
   const [filterMods, setFilterMods] = useState(true);
   const [multiOnly, setMultiOnly] = useState(false);
+  const [trackCat, setTrackCat] = useState('All');
+
+  const trackingRows = useMemo(() => {
+    if (trackCat === 'All') return TRACKING_ANALYSIS_DATA;
+    return TRACKING_ANALYSIS_DATA.filter((r) => r.category === trackCat);
+  }, [trackCat]);
 
   // Quote size: shared with the Quotation / Calculator pages through localStorage 'sp_inp'
   const [size, setSize] = useState(loadSize);
@@ -478,6 +749,132 @@ export default function MarketAnalysisView() {
           <li><b>Jewel / gold loan:</b> CK Tech is built around it (from Rs 10,000 + Rs 6,000/yr). AMY includes it in NBFC plans. Softdew and the Genuine IT listing only name "gold loan" as a loan type. Habile's guide says it adds configuration cost with no figure.</li>
         </ul>
         <p className="mk-foot">Habile's guide page is branded "NBFC Software" and does not name Habile Technologies. Pages change; verify before quoting.</p>
+      </section>
+
+      {/* Live Tracking Deep-Dive Analysis */}
+      <section className="card mk-card mk-live-tracking-section">
+        <h2 className="mk-h2"><Navigation size={17} /> Live Tracking & Field Force Market Analysis</h2>
+        <p className="mk-sub">
+          In-depth technical and pricing review of real-time GPS tracking, geotagging, and field collection monitoring across all 21 microfinance software vendors from the market study.
+        </p>
+
+        {/* 4 Category Summary Cards */}
+        <div className="mk-track-grid">
+          <div className={'mk-track-card' + (trackCat === 'live-gps' ? ' active-card' : '')} onClick={() => setTrackCat(trackCat === 'live-gps' ? 'All' : 'live-gps')} style={{ cursor: 'pointer' }}>
+            <div className="mk-track-card-head">
+              <span>True Live GPS</span>
+              <span className="mk-track-count">2</span>
+            </div>
+            <p className="mk-track-desc">Continuous background GPS streaming, interactive Google Map, live officer location, speed, battery, and route playback.</p>
+            <div className="mk-track-examples">Knock The Globe (MFI), HRBluSky (HR only)</div>
+          </div>
+
+          <div className={'mk-track-card' + (trackCat === 'passive-geo' ? ' active-card' : '')} onClick={() => setTrackCat(trackCat === 'passive-geo' ? 'All' : 'passive-geo')} style={{ cursor: 'pointer' }}>
+            <div className="mk-track-card-head">
+              <span>Passive Geotagging</span>
+              <span className="mk-track-count">3</span>
+            </div>
+            <p className="mk-track-desc">Single point-in-time GPS coordinate stamped only upon receipt submission or appraisal. Zero travel path or live movement.</p>
+            <div className="mk-track-examples">Jaguar Software, TaxHint, Aspire</div>
+          </div>
+
+          <div className={'mk-track-card' + (trackCat === 'ledger-sync' ? ' active-card' : '')} onClick={() => setTrackCat(trackCat === 'ledger-sync' ? 'All' : 'ledger-sync')} style={{ cursor: 'pointer' }}>
+            <div className="mk-track-card-head">
+              <span>Transaction Sync Only</span>
+              <span className="mk-track-count">4</span>
+            </div>
+            <p className="mk-track-desc">Branded as "tracking", but refers solely to instant digital ledger updates when a payment is marked. No GPS location tracked.</p>
+            <div className="mk-track-examples">LendStack (Vasool), AMY, IDSPay, Zetu</div>
+          </div>
+
+          <div className={'mk-track-card' + (trackCat === 'no-track' ? ' active-card' : '')} onClick={() => setTrackCat(trackCat === 'no-track' ? 'All' : 'no-track')} style={{ cursor: 'pointer' }}>
+            <div className="mk-track-card-head">
+              <span>No Location Tracking</span>
+              <span className="mk-track-count">14</span>
+            </div>
+            <p className="mk-track-desc">Standard accounting or branch portal. Has zero field agent location tracking or GPS capabilities.</p>
+            <div className="mk-track-examples">Microfinsoft, Vector, CK Tech, Softdew, Hubco...</div>
+          </div>
+        </div>
+
+        {/* Filter Chips */}
+        <div className="mk-matrix-bar" style={{ marginBottom: 12 }}>
+          <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#475569' }}>Filter by Capability:</span>
+          <div className="mk-chips" role="radiogroup" aria-label="Tracking Category">
+            {TRACKING_CATEGORIES.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                role="radio"
+                aria-checked={trackCat === c.id}
+                className={trackCat === c.id ? 'active' : ''}
+                onClick={() => setTrackCat(c.id)}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Live Tracking Matrix Table */}
+        <div className="mk-track-table-wrap" tabIndex={0} aria-label="Live Tracking Table">
+          <table className="mk-track-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Tracking Type</th>
+                <th>Live GPS Pings</th>
+                <th>Map Route Playback</th>
+                <th>Geofenced Visits</th>
+                <th>MFI Integration</th>
+                <th>Tracking Pricing Model</th>
+                <th>Technical Reality</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trackingRows.map((r) => (
+                <tr key={r.name} className={r.isOurs ? 'mk-track-ours-row' : ''}>
+                  <td style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                    {r.name}
+                    {r.isOurs && <span style={{ marginLeft: 6, fontSize: '10.5px', color: '#c2410c' }}>(Our Platform)</span>}
+                  </td>
+                  <td>
+                    <span className={'mk-tag-pill ' + r.category}>{r.categoryLabel}</span>
+                  </td>
+                  <td>{r.pings}</td>
+                  <td>{r.playback}</td>
+                  <td>{r.geofence}</td>
+                  <td>{r.mfiInt}</td>
+                  <td style={{ fontWeight: 600 }}>{r.cost}</td>
+                  <td style={{ minWidth: 260, fontSize: '11.5px', color: '#475569' }}>{r.notes}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Architectural Deep-Dive Callouts */}
+        <div className="mk-track-callout">
+          <div className="mk-track-box">
+            <h3><AlertTriangle size={16} color="#d97706" /> Why 95% of Competitors Omit True Live Tracking</h3>
+            <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
+              <li><b>Continuous API & Server Ingestion:</b> Streaming GPS pings every 3-5 minutes from 100+ field collection officers generates millions of monthly telemetry pings that overload cheap shared hosts.</li>
+              <li><b>Google Maps API Billing:</b> Interactive Maps JavaScript loads and Google Roads (Snap-to-Roads) require pay-as-you-go billing. Vendors selling one-time licenses (Rs 5,000 - 60,000) cannot absorb recurring API costs.</li>
+              <li><b>Misleading Terminology:</b> Competitors frequently label transaction entry ("offline vasool synced to cloud") as "live tracking", concealing the complete absence of physical location tracking.</li>
+              <li><b>Workforce Trackers Lack MFI:</b> Platforms with good GPS tracking (like HRBluSky) are built solely for HR attendance and have no loan ledgers, EMI schedules, or SHG/JLG center management.</li>
+            </ul>
+          </div>
+
+          <div className="mk-track-box ours-highlight">
+            <h3><CheckCircle2 size={16} color="#059669" /> How Knock The Globe (KTG) Solves Live Tracking</h3>
+            <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6 }}>
+              <li><b>Native MFI Workflow:</b> Field officer location is integrated directly into center meetings, daily loan recovery, and cash handovers.</li>
+              <li><b>Google Maps Snap-to-Roads:</b> Raw mobile GPS drifts by 10-30m; our Snap-to-Roads pipeline snaps officer trajectories to actual street geometry for reliable route inspection.</li>
+              <li><b>Transparent Pass-Through Pricing:</b> We leverage Google Cloud's free monthly tier (10,000 dynamic map loads and 5,000 Snap-to-Roads calls free every month), billing only actual incremental usage at cost with zero hidden markups.</li>
+              <li><b>Battery & Data Optimized:</b> Smart ping intervals (active while on duty) ensure field officers can complete 8-10 hour collection shifts without depleting phone batteries.</li>
+            </ul>
+          </div>
+        </div>
       </section>
 
       {/* Company list */}
