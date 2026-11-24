@@ -1,31 +1,31 @@
 import { useEffect, useState } from 'react';
-import { FileText, Calculator, Gauge, BookOpen, Users, BarChart3 } from 'lucide-react';
+import { FileText, Calculator, Cloud, BookOpen, Users, BarChart3 } from 'lucide-react';
 import logo from '../assets/ktg-logo.png';
 import CalculatorView from '../views/CalculatorView.jsx';
 import CustomerView from '../views/CustomerView.jsx';
 import CustomerPageView from '../views/CustomerPageView.jsx';
 import HowItWorksView from '../views/HowItWorksView.jsx';
-import CapacityView from '../views/CapacityView.jsx';
 import MarketAnalysisView from '../views/MarketAnalysisView.jsx';
+import MultiCloudView from '../views/MultiCloudView.jsx';
 
 const ROUTES = {
   '#/calculator': 'calc',
-  '#/capacity': 'capacity',
   '#/how': 'how',
   '#/customer': 'customer',
   '#/market': 'market',
+  '#/multicloud': 'multicloud',
 };
 
 // Home page ("#/" or empty) = Customer quotation
 const routeOf = () => ROUTES[window.location.hash] || 'customer-page';
 
 const NAV = [
-  { route: 'customer-page', href: '#/', label: 'Quotation', Icon: FileText },
-  { route: 'calc', href: '#/calculator', label: 'Calculator', Icon: Calculator },
-  { route: 'capacity', href: '#/capacity', label: 'Capacity', Icon: Gauge },
-  { route: 'how', href: '#/how', label: "How it's calculated", Icon: BookOpen },
-  { route: 'customer', href: '#/customer', label: 'Customer View', Icon: Users },
-  { route: 'market', href: '#/market', label: 'Market Analysis', Icon: BarChart3 },
+  { route: 'customer-page', href: '#/',           label: 'Quotation',          Icon: FileText },
+  { route: 'calc',          href: '#/calculator', label: 'Calculator',         Icon: Calculator },
+  { route: 'multicloud',    href: '#/multicloud', label: 'Capacity',           Icon: Cloud },
+  { route: 'how',           href: '#/how',        label: "How it's calculated", Icon: BookOpen },
+  { route: 'customer',      href: '#/customer',   label: 'Customer View',      Icon: Users },
+  { route: 'market',        href: '#/market',     label: 'Market Analysis',    Icon: BarChart3 },
 ];
 
 export default function NavigationController() {
@@ -76,8 +76,8 @@ export default function NavigationController() {
         <MarketAnalysisView />
       ) : route === 'how' ? (
         <HowItWorksView />
-      ) : route === 'capacity' ? (
-        <CapacityView />
+      ) : route === 'multicloud' ? (
+        <MultiCloudView />
       ) : route === 'customer' ? (
         <CustomerView />
       ) : route === 'customer-page' ? (
