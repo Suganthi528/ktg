@@ -170,7 +170,7 @@ export default function Capacity() {
     linodeBackup: inp.backup ? `${d(res.planUsd)} × ${rates.linodeBackupPct}% × ₹${fx}` : 'Backup off → 0',
     db: `${d(res.dbUsd)} × ₹${fx}`,
     storage: `(${d(rates.spacesUsdPer250GB)} + ${extraGB.toFixed(1)} GB extra × ${d(rates.spacesExtraUsdPerGB)}) × ₹${fx}`,
-    map: `${d(res.mapUsd)} (calls beyond Google free tier) × ₹${fx}`,
+    map: `${d(res.mapUsd)} (all calls billed, no free tier) × ₹${fx}`,
   };
 
   const rows = STEPS[driver].map((v) => {
@@ -824,7 +824,7 @@ export default function Capacity() {
                     <tr>
                       <td><b>Map loads / month</b></td>
                       <td>
-                        {tracked} tracked × ({rates.mapJsPerUserPerDay} loads + {rates.mapRoadsPerUserPerDay} roads) per day × {rates.workDaysPerMonth} days, minus Google free tier
+                        {tracked} tracked × ({rates.mapJsPerUserPerDay} loads + {rates.mapRoadsPerUserPerDay} roads) per day × {rates.workDaysPerMonth} days
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <span className="cap-val-pill">{fmt(res.mapLoads)} loads</span>
